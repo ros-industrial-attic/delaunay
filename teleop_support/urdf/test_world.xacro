@@ -1,0 +1,19 @@
+<?xml version="1.0" ?>
+<robot name="sia20d_workspace" xmlns:xacro="http://ros.org/wiki/xacro">
+  
+  <link name="world"/>
+
+  <link name="object">
+    <visual>
+      <geometry>
+          <mesh filename="package://teleop_support/meshes/YOUR_FILE_HERE" />
+      </geometry>
+    </visual> 
+  </link>
+
+  <joint name="world_to_object" type="fixed">
+    <child link="object"/>
+    <parent link="world"/>
+  </joint>
+
+</robot>
