@@ -51,45 +51,28 @@ geometry_msgs::PoseStamped makeStampedPose(const Eigen::Affine3d& pose)
   return stamped;
 }
 
-// Global data for callback
-Eigen::Affine3d target_pose = Eigen::Affine3d::Identity();
-double r = 0.002;
-
 void pointCallback(const geometry_msgs::Point::ConstPtr& pt,
                    const teleop_tracking::Mesh& mesh,
                    ros::Publisher& pub,
                    ros::Publisher& pose_pub)
 {
-  if (pt->x > 0 && pt->y > 0)
-  {
-    ROS_WARN("R = %f", r);
-    r += 0.01;
-    return;
-  }
-  else if (pt->x < 0 && pt->y < 0)
-  {
-    ROS_WARN(" R = %f", r);
-    r -= 0.01;
-    if (r < 0.0) r = 0.0;
-    return;
-  }
-
-  // From local pose, walk along the axis
   ROS_WARN("Moving %f %f %f", pt->x, pt->y, pt->z);
   Eigen::Vector3d v (pt->x, pt->y, pt->z);
-  Eigen::Affine3d new_pose = target_pose * Eigen::Translation3d(v) * Eigen::Translation3d(Eigen::Vector3d(0,0,0.001));
+  visualization_msgs::Marker m_pt = makeMarker(v, source_id);
 
-  // Snap to surface
-  Eigen::Affine3d e_pose = mesh.closestPose2(new_pose.translation(), r, target_pose.matrix().col(2).head<3>());
-  target_pose = e_pose;
+  teleop_tracking::TrianglePosition close = mesh.closestPoint(v);
 
-  geometry_msgs::PoseStamped pose = makeStampedPose(e_pose);
+  visualization_msgs::Marker m_pt2 = makeMarker(close.position, latch_id);
 
-  Eigen::Vector3d v2 = mesh.walkTriangles(new_pose.translation(), v, 0.1);
-  visualization_msgs::Marker m_pt = makeMarker(v2, source_id);
+  Eigen::Vector3d int_point;
+  Eigen::Vector3d v2 = mesh.walkTriangles(close.position, int_point, 0.1);
+  visualization_msgs::Marker m_pt3 = makeMarker(v2, 4);
+  visualization_msgs::Marker m_pt4 = makeMarker(int_point, 5);
 
   pub.publish(m_pt);
-  pose_pub.publish(pose);
+  pub.publish(m_pt2);
+  pub.publish(m_pt3);
+  pub.publish(m_pt4);
 }
 
 int main(int argc, char** argv)
@@ -108,11 +91,13 @@ int main(int argc, char** argv)
     return -1;
   }
 
+  std::cout << "Loading mesh...\n";
+
   teleop_tracking::Mesh mesh(mesh_file);
 
-  mesh.debugInfo();
+  std::cout << "Done loading mesh\n";
 
-  target_pose = mesh.closestPose(Eigen::Vector3d(0, 0, 0.1));
+  mesh.debugInfo();
 
   ros::NodeHandle nh;
   ros::Publisher pub = nh.advertise<visualization_msgs::Marker>("markers", 1000);

@@ -56,13 +56,7 @@ void pointCallback(const geometry_msgs::Point::ConstPtr& pt,
                    ros::Publisher& pose_pub)
 {
   Eigen::Vector3d v (pt->x, pt->y, pt->z);
-  Eigen::Affine3d e_pose = mesh.closestPose(v);
-
   visualization_msgs::Marker m_pt = makeMarker(v, source_id);
-  geometry_msgs::PoseStamped pose = makeStampedPose(e_pose);
-
-  pub.publish(m_pt);
-  pose_pub.publish(pose);
 }
 
 int main(int argc, char** argv)

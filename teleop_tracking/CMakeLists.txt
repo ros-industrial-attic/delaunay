@@ -82,7 +82,7 @@ catkin_package(
  INCLUDE_DIRS include
  LIBRARIES teleop_tracking
  CATKIN_DEPENDS roscpp eigen_conversions
- DEPENDS assimp
+ DEPENDS
 )
 
 ###########
@@ -101,6 +101,7 @@ include_directories(
 add_library(teleop_tracking
   src/mesh.cpp
   src/point_to_triangle.cpp
+  src/combine_vertices.cpp
 )
 
 add_library(stl_loader
@@ -123,7 +124,7 @@ add_executable(stl_loader_test src/stl_loader_test.cpp)
 ## Specify libraries to link a library or executable target against
 target_link_libraries(teleop_tracking
   ${catkin_LIBRARIES}
-  assimp
+  stl_loader
 )
 
 target_link_libraries(mesh_pub

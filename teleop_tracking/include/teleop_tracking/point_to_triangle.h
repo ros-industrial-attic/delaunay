@@ -13,8 +13,9 @@ bool intersect(const Eigen::ParametrizedLine<double, 3>& a,
                const Eigen::ParametrizedLine<double, 3>& b,
                Eigen::Vector3d& out);
 
-bool intersectPlanes(const Eigen::ParametrizedLine<double, 3>& a,
-                     const Eigen::ParametrizedLine<double, 3>& b, const Eigen::Hyperplane<double, 3> &plane,
+bool intersectPlanes(const Eigen::ParametrizedLine<double, 3>& walk_dir,
+                     const Eigen::ParametrizedLine<double, 3>& edge,
+                     const Eigen::Hyperplane<double, 3> &plane,
                      double &out);
 
 

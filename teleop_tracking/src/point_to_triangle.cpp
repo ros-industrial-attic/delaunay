@@ -128,16 +128,16 @@ bool teleop_tracking::intersect(const Eigen::ParametrizedLine<double, 3> &a,
   return false;
 }
 
-bool teleop_tracking::intersectPlanes(const Eigen::ParametrizedLine<double, 3> &a,
-                                      const Eigen::ParametrizedLine<double, 3> &b,
+bool teleop_tracking::intersectPlanes(const Eigen::ParametrizedLine<double, 3> &walk_dir,
+                                      const Eigen::ParametrizedLine<double, 3> &edge,
                                       const Eigen::Hyperplane<double, 3> &plane,
                                       double &out)
 {
   Eigen::Vector3d n = plane.normal();
-  Eigen::Vector3d dir = b.direction();
-  Eigen::Hyperplane<double, 3> iplane(n.cross(dir), b.origin());
+  Eigen::Vector3d dir = edge.direction();
+  Eigen::Hyperplane<double, 3> iplane(n.cross(dir), edge.origin());
 
-  out = a.intersection(iplane);
+  out = walk_dir.intersection(iplane);
   std::cout << "S1: " << out << '\n';
 
   return false;
