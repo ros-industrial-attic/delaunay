@@ -66,6 +66,9 @@ public:
   Eigen::Affine3d walkTriangle2(const Eigen::Affine3d& start, unsigned start_triangle_idx, unsigned &new_triangle_idx,
                                 const Eigen::Vector2d& travel) const;
 
+  bool walkTriangleFrom(Eigen::Affine3d& pose, unsigned& triangle_idx, unsigned& prev_triangle_idx,
+                        double& distance, const Eigen::Vector3d& direction) const;
+
   TriangleRef triangle(unsigned idx) const
   {
     unsigned idx_base = idx*3;
@@ -80,7 +83,8 @@ protected:
   bool findTriangleNeighbors(unsigned idx1, unsigned idx2, std::vector<unsigned>& neighbors) const;
 
   bool findNeighbor(unsigned vertex_idx1, unsigned vertex_idx2,
-                    unsigned current_triangle_idx, unsigned& triangle_idx_out) const;
+                    unsigned current_triangle_idx,
+                    unsigned& triangle_idx_out) const;
 
 private:
   EigenSTL::vector_Vector3d vertices_;

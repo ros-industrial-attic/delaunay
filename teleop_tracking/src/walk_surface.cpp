@@ -74,7 +74,6 @@ void pointCallback(const geometry_msgs::Point::ConstPtr& pt,
                                                 current_tpose.index,
                                                 Eigen::Vector2d(v(0), v(1)));
 
-  std::cout << "Current Pose:\n" << new_pose.matrix() << "\n";
   std::cout << "Current Indx: " << current_tpose.index << "\n";
 
   geometry_msgs::PoseStamped gpose1 = makeStampedPose(current_tpose.pose);

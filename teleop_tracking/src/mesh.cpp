@@ -49,7 +49,7 @@ struct IntersectionResult
   double dist;
 };
 
-IntersectionResult findIntersection(const Line3d& walk_dir, const teleop_tracking::TriangleRef& triangle)
+IntersectionResult findIntersection(const Line3d& walk_dir, const teleop_tracking::TriangleRef& triangle, bool ignore_close = false)
 {
   // Define sides
   // edge 0 : a->b
@@ -73,9 +73,11 @@ IntersectionResult findIntersection(const Line3d& walk_dir, const teleop_trackin
     walk_dir.intersection(planes[2])
   };
 
+  std::cout << "DISTS: " << dists[0] << " " << dists[1] << " " << dists[2] << '\n';
+
   // Post process
   for (int i = 0; i < 3; ++i)
-    if (dists[i] < 0.0) dists[i] = std::numeric_limits<double>::max();
+    if (dists[i] < (ignore_close ? 0.001 : 0.0)) dists[i] = std::numeric_limits<double>::max();
 
   // Find closest intersection in the forward direction
   int min_idx = 0;
@@ -262,7 +264,33 @@ Eigen::Vector3d teleop_tracking::Mesh::walkTriangles(const Eigen::Vector3d &star
 
 Eigen::Affine3d teleop_tracking::Mesh::walkTriangle2(const Eigen::Affine3d &start, unsigned start_triangle_idx, unsigned &new_triangle_idx, const Eigen::Vector2d &travel) const
 {
-  TriangleRef t = triangle(start_triangle_idx);
+  Eigen::Affine3d current_pose = start;
+  double distance_to_travel = travel.norm();
+  Eigen::Vector3d direction_of_travel = Eigen::Vector3d(travel(0), travel(1), 0).normalized();
+
+  unsigned previous_triangle_idx = start_triangle_idx;
+  unsigned current_triangle_idx = start_triangle_idx;
+
+
+    // from a previous triangle to new one -> only have to check two components
+  while (!walkTriangleFrom(current_pose,
+                           current_triangle_idx,
+                           previous_triangle_idx,
+                           distance_to_travel,
+                           direction_of_travel))
+  {
+    // Rotate to the new orientation
+    std::cout << "STEPPING TRIANGLE " << distance_to_travel << " to go\n";
+  }
+
+  new_triangle_idx = current_triangle_idx;
+  return current_pose;
+
+
+
+
+
+  /*TriangleRef t = triangle(start_triangle_idx);
 
   // Calculate walk direction
   Eigen::Affine3d delta_pose = start * Eigen::Translation3d(travel(0), travel(1), 0);
@@ -272,7 +300,6 @@ Eigen::Affine3d teleop_tracking::Mesh::walkTriangle2(const Eigen::Affine3d &star
   Eigen::Vector3d intersect_point = walk_dir.pointAt(int_result.dist);
   // Check magnitude
   Eigen::Affine3d result_pose = start;
-
   double to_go = travel.norm();
   if (int_result.dist > to_go)
   {
@@ -321,6 +348,78 @@ Eigen::Affine3d teleop_tracking::Mesh::walkTriangle2(const Eigen::Affine3d &star
     }
     return result_pose;
   }
+  */
+}
+
+bool teleop_tracking::Mesh::walkTriangleFrom(Eigen::Affine3d &pose, unsigned &triangle_idx,
+                                             unsigned &prev_triangle_idx,
+                                             double &distance, const Eigen::Vector3d &direction) const
+{
+  TriangleRef t = triangle(triangle_idx);
+
+  // Calculate walk direction
+  Eigen::Affine3d delta_pose = pose * Eigen::Translation3d(distance * direction);
+  Line3d walk_dir (pose.translation(),
+                   (delta_pose.translation() - pose.translation()).normalized());
+
+  // Find the closest intersection
+  IntersectionResult intersection;
+  if (triangle_idx == prev_triangle_idx)
+  {
+    // This is the first triangle and we need to test all the sides
+    intersection = findIntersection(walk_dir, t);
+  }
+  else
+  {
+    intersection = findIntersection(walk_dir, t, true);
+  }
+
+  if (intersection.dist > distance)
+  {
+    // Does not collide with edge. Walk terminates in this triangle.
+    pose.translation() = walk_dir.pointAt(distance);
+    distance = 0.0;
+    return true;
+  }
+
+  // We do collide. Necessary to look up next triangle and prepare for the transition.
+  pose.translation() = walk_dir.pointAt(intersection.dist);
+  distance -= intersection.dist;
+
+  unsigned next_triangle_idx;
+  if (findNeighbor(triangle_indices_[intersection.v1],
+                   triangle_indices_[intersection.v2],
+                   triangle_idx, next_triangle_idx))
+  {
+    // Calculate rotation
+    Eigen::Vector3d rot_edge = vertices_[triangle_indices_[intersection.v2]] -
+                               vertices_[triangle_indices_[intersection.v1]];
+
+    double rot_amt = std::acos(face_normals_[triangle_idx].dot(face_normals_[next_triangle_idx]));
+
+    Eigen::AngleAxisd rotation (rot_amt, rot_edge.normalized());
+    Eigen::Affine3d rot_in_local_frame = pose.inverse() * rotation * pose;
+    rot_in_local_frame.matrix().col(3) = Eigen::Vector4d::Zero();
+
+    pose = pose * rot_in_local_frame;
+    if (!pose.matrix().col(2).head<3>().isApprox(face_normals_[next_triangle_idx], 1e-4))
+    {
+      Eigen::AngleAxisd back_the_other_way (-2.0 * rot_amt, rotation.axis());
+      pose *= back_the_other_way;
+    }
+
+    // Continue
+    // There is a valid neighbor
+    prev_triangle_idx = triangle_idx;
+    triangle_idx = next_triangle_idx;
+    return false;
+  }
+  else
+  {
+    // There is not a valid neighbor
+    std::cerr << "No valid neighbor for triangle " << triangle_idx << '\n';
+    return true;
+  }
 }
 
 bool teleop_tracking::Mesh::findTriangleNeighbors(unsigned idx1, unsigned idx2, std::vector<unsigned> &neighbors) const
@@ -347,7 +446,7 @@ bool teleop_tracking::Mesh::findTriangleNeighbors(unsigned idx1, unsigned idx2, 
 
 bool teleop_tracking::Mesh::findNeighbor(unsigned idx1, unsigned idx2,
                                          unsigned current_triangle_idx,
-                                         unsigned &out) const
+                                         unsigned &triangle_idx_out) const
 {
   for (unsigned i = 0; i < triangle_indices_.size(); i += 3)
   {
@@ -361,7 +460,7 @@ bool teleop_tracking::Mesh::findNeighbor(unsigned idx1, unsigned idx2,
       {
         if (i/3 != current_triangle_idx)
         {
-          out = i/3;
+          triangle_idx_out = i/3;
           return true;
         }
       }
