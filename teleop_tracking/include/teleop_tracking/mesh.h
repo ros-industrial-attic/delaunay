@@ -27,6 +27,25 @@ struct TrianglePose
   unsigned int index;
 };
 
+struct TriangleRef
+{
+  TriangleRef(unsigned index,
+              const Eigen::Vector3d& a,
+              const Eigen::Vector3d& b,
+              const Eigen::Vector3d& c,
+              const Eigen::Vector3d& normal)
+    : a(a), b(b), c(c)
+    , normal(normal)
+    , index(index)
+   {}
+
+  const Eigen::Vector3d& a;
+  const Eigen::Vector3d& b;
+  const Eigen::Vector3d& c;
+  const Eigen::Vector3d& normal;
+  unsigned index;
+};
+
 class Mesh
 {
 public:
@@ -44,11 +63,24 @@ public:
 
   Eigen::Vector3d walkTriangles(const Eigen::Vector3d& start, Eigen::Vector3d& dir, double d) const;
 
-  Eigen::Affine3d walkTriangle2(const Eigen::Affine3d& start, unsigned start_triangle_idx,
+  Eigen::Affine3d walkTriangle2(const Eigen::Affine3d& start, unsigned start_triangle_idx, unsigned &new_triangle_idx,
                                 const Eigen::Vector2d& travel) const;
+
+  TriangleRef triangle(unsigned idx) const
+  {
+    unsigned idx_base = idx*3;
+    return TriangleRef(idx, vertices_[triangle_indices_[idx_base + 0]],
+                            vertices_[triangle_indices_[idx_base + 1]],
+                            vertices_[triangle_indices_[idx_base + 2]],
+                            face_normals_[idx]);
+
+  }
 
 protected:
   bool findTriangleNeighbors(unsigned idx1, unsigned idx2, std::vector<unsigned>& neighbors) const;
+
+  bool findNeighbor(unsigned vertex_idx1, unsigned vertex_idx2,
+                    unsigned current_triangle_idx, unsigned& triangle_idx_out) const;
 
 private:
   EigenSTL::vector_Vector3d vertices_;

@@ -51,28 +51,56 @@ geometry_msgs::PoseStamped makeStampedPose(const Eigen::Affine3d& pose)
   return stamped;
 }
 
+
 void pointCallback(const geometry_msgs::Point::ConstPtr& pt,
                    const teleop_tracking::Mesh& mesh,
                    ros::Publisher& pub,
                    ros::Publisher& pose_pub)
 {
+  using teleop_tracking::TrianglePose;
+  using teleop_tracking::TrianglePosition;
+
+  static TrianglePose current_tpose = mesh.closestPose(Eigen::Vector3d(0.01,0,1));
+
   ROS_WARN("Moving %f %f %f", pt->x, pt->y, pt->z);
+
+  if (pt->z != 0.0) return;
+
   Eigen::Vector3d v (pt->x, pt->y, pt->z);
-  visualization_msgs::Marker m_pt = makeMarker(v, source_id);
 
-  teleop_tracking::TrianglePosition close = mesh.closestPoint(v);
 
-  visualization_msgs::Marker m_pt2 = makeMarker(close.position, latch_id);
+  Eigen::Affine3d new_pose = mesh.walkTriangle2(current_tpose.pose,
+                                                current_tpose.index,
+                                                current_tpose.index,
+                                                Eigen::Vector2d(v(0), v(1)));
 
-  Eigen::Vector3d int_point;
-  Eigen::Vector3d v2 = mesh.walkTriangles(close.position, int_point, 0.1);
-  visualization_msgs::Marker m_pt3 = makeMarker(v2, 4);
-  visualization_msgs::Marker m_pt4 = makeMarker(int_point, 5);
+  std::cout << "Current Pose:\n" << new_pose.matrix() << "\n";
+  std::cout << "Current Indx: " << current_tpose.index << "\n";
+
+  geometry_msgs::PoseStamped gpose1 = makeStampedPose(current_tpose.pose);
+
+  current_tpose.pose = new_pose;
+
+  Eigen::Vector3d int_point = new_pose.translation();
+  visualization_msgs::Marker m_pt = makeMarker(int_point, latch_id);
+
 
   pub.publish(m_pt);
-  pub.publish(m_pt2);
-  pub.publish(m_pt3);
-  pub.publish(m_pt4);
+  pose_pub.publish(gpose1);
+
+
+//  teleop_tracking::TrianglePosition close = mesh.closestPoint(v);
+
+
+//  Eigen::Vector3d int_point;
+//  Eigen::Vector3d v2 = mesh.walkTriangles(close.position, int_point, 0.1);
+//  visualization_msgs::Marker m_pt3 = makeMarker(v2, 4);
+//  visualization_msgs::Marker m_pt4 = makeMarker(int_point, 5);
+
+//  pub.publish(m_pt);
+//  pub.publish(m_pt2);
+//  pub.publish(m_pt3);
+//  pub.publish(m_pt4);
 }
 
 int main(int argc, char** argv)

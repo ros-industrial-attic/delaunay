@@ -118,9 +118,11 @@
        break;
        case 't':
          step += 0.0005;
+         ROS_INFO("step size: %f", step);
        break;
      case 'y':
        step -= 0.0005;
+       ROS_INFO("step size: %f", step);
        break;
      case 'o':
        pt_.y = step;
