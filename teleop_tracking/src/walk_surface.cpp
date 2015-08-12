@@ -60,11 +60,11 @@ void pointCallback(const geometry_msgs::Point::ConstPtr& pt,
   using teleop_tracking::TrianglePose;
   using teleop_tracking::TrianglePosition;
 
-  static TrianglePose current_tpose = mesh.closestPose(Eigen::Vector3d(0.05,0.1,0.5));
+  static TrianglePose current_tpose = mesh.closestPose(Eigen::Vector3d(0.05,0.1,-0.5));
 
   ROS_WARN("Moving %f %f %f", pt->x, pt->y, pt->z);
 
-  if (pt->z != 0.0)
+  if (pt->z > 0.0)
   {
     current_tpose = mesh.closestPose(current_tpose.pose.translation());
     geometry_msgs::PoseStamped gpose = makeStampedPose(current_tpose.pose);
@@ -72,6 +72,12 @@ void pointCallback(const geometry_msgs::Point::ConstPtr& pt,
     if (current_tpose.pose.matrix()(0,0) != current_tpose.pose.matrix()(0,0)) exit(1);
     pose_pub.publish(gpose);
     return;
+  }
+
+  if (pt->z < 0)
+  {
+    Eigen::AngleAxisd twist (0.1, Eigen::Vector3d::UnitZ());
+    current_tpose.pose *= twist;
   }
 
   Eigen::Vector3d v (pt->x, pt->y, pt->z);

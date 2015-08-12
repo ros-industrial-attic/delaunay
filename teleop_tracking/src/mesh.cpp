@@ -181,12 +181,14 @@ Eigen::Affine3d teleop_tracking::Mesh::walkTriangle2(const Eigen::Affine3d &star
 
   unsigned previous_triangle_idx = start_triangle_idx;
   unsigned current_triangle_idx = start_triangle_idx;
+  Edge last_edge;
 
 
     // from a previous triangle to new one -> only have to check two components
   while (!walkTriangleFrom(current_pose,
                            current_triangle_idx,
                            previous_triangle_idx,
+                           last_edge,
                            distance_to_travel,
                            direction_of_travel))
   {
@@ -207,7 +209,7 @@ Eigen::Affine3d teleop_tracking::Mesh::walkTriangle2(const Eigen::Affine3d &star
 //static Eigen::Affine3d toDifferentFrame(const )
 
 bool teleop_tracking::Mesh::walkTriangleFrom(Eigen::Affine3d &pose, unsigned &triangle_idx,
-                                             unsigned &prev_triangle_idx,
+                                             unsigned &prev_triangle_idx, Edge &last_edge,
                                              double &distance,
                                              const Eigen::Vector3d &direction) const
 {
@@ -224,23 +226,74 @@ bool teleop_tracking::Mesh::walkTriangleFrom(Eigen::Affine3d &pose, unsigned &tr
   {
     // This is the first triangle and we need to test all the sides
     intersection = findIntersection(walk_dir, t);
+    last_edge.v1 = triangle_indices_[intersection.v1];
+    last_edge.v2 = triangle_indices_[intersection.v2];
   }
   else
   {
     // Formulate edge query
-    intersection = findIntersection(walk_dir, t, true);
+    unsigned new_vertex = last_edge.v1 ^ last_edge.v2 ^
+        triangle_indices_[triangle_idx*3 + 0] ^
+        triangle_indices_[triangle_idx*3 + 1] ^
+        triangle_indices_[triangle_idx*3 + 2];
+
+    IntersectInput in;
+    in.walk = walk_dir;
+    in.normal = face_normals_[triangle_idx];
+    Edge e1;
+    e1.v1 = last_edge.v1;
+    e1.v2 = new_vertex;
+    in.edges.push_back(e1);
+    e1.v1 = last_edge.v2;
+    in.edges.push_back(e1);
+
+    IntersectOutput out = findIntersect(in);
+    intersection.dist = out.dist;
+
+    last_edge.v1 = in.edges[out.edge_index].v1;
+    last_edge.v2 = in.edges[out.edge_index].v2;
+
+    if (triangle_indices_[triangle_idx*3+0] == last_edge.v1)
+    {
+      intersection.v1 = triangle_idx*3+0;
+    } else if (triangle_indices_[triangle_idx*3+1] == last_edge.v1)
+    {
+      intersection.v1 = triangle_idx*3+1;
+    } else
+    {
+      intersection.v1 = triangle_idx*3+2;
+    }
+
+    if (triangle_indices_[triangle_idx*3+0] == last_edge.v2)
+    {
+      intersection.v2 = triangle_idx*3+0;
+    } else if (triangle_indices_[triangle_idx*3+1] == last_edge.v2)
+    {
+      intersection.v2 = triangle_idx*3+1;
+    } else
+    {
+      intersection.v2 = triangle_idx*3+2;
+    }
+  }
+
+  Plane3d home_plane (t.normal, t.a);
+
+  if (intersection.dist == std::numeric_limits<double>::max())
+  {
+    distance = 0.0;
+    return true;
   }
 
   if (intersection.dist > distance)
   {
     // Does not collide with edge. Walk terminates in this triangle.
-    pose.translation() = walk_dir.pointAt(distance);
+    pose.translation() = home_plane.projection(walk_dir.pointAt(distance));
     distance = 0.0;
     return true;
   }
 
   // We do collide. Necessary to look up next triangle and prepare for the transition.
-  pose.translation() = walk_dir.pointAt(intersection.dist);
+  pose.translation() = home_plane.projection(walk_dir.pointAt(intersection.dist));
   distance -= intersection.dist;
 
   unsigned next_triangle_idx;
@@ -256,16 +309,16 @@ bool teleop_tracking::Mesh::walkTriangleFrom(Eigen::Affine3d &pose, unsigned &tr
     double rot_amt = std::acos(face_normals_[triangle_idx].dot(face_normals_[next_triangle_idx]));
     if (rot_amt != rot_amt) rot_amt = 0.0;
 
-    std::cout << "From N: " << face_normals_[triangle_idx].transpose() << "\nTo N: " << face_normals_[next_triangle_idx].transpose() <<'\n';
-    std::cout << "Rot amt: " << rot_amt << " about " << rot_edge.transpose() << '\n';
+//    std::cout << "From N: " << face_normals_[triangle_idx].transpose() << "\nTo N: " << face_normals_[next_triangle_idx].transpose() <<'\n';
+//    std::cout << "Rot amt: " << rot_amt << " about " << rot_edge.transpose() << '\n';
 
     Eigen::AngleAxisd rotation (rot_amt, rot_edge.normalized());
     Eigen::Affine3d rot_in_local_frame = Eigen::Affine3d::Identity();
     rot_in_local_frame.matrix().block<3,3>(0,0) = pose.linear().inverse() * rotation.toRotationMatrix() * pose.linear();
     rot_in_local_frame.matrix().col(3) = Eigen::Vector4d(0, 0, 0, 1);
 
-    std::cout << "Local rot:\n" << rot_in_local_frame.matrix() << '\n';
-    std::cout << "Prev pose:\n" << pose.matrix() << '\n';
+//    std::cout << "Local rot:\n" << rot_in_local_frame.matrix() << '\n';
+//    std::cout << "Prev pose:\n" << pose.matrix() << '\n';
 
     Eigen::Affine3d rotated_frame = pose * rot_in_local_frame;
     if (!rotated_frame.matrix().col(2).head<3>().isApprox(face_normals_[next_triangle_idx], 1e-4))
@@ -280,7 +333,7 @@ bool teleop_tracking::Mesh::walkTriangleFrom(Eigen::Affine3d &pose, unsigned &tr
 
     pose = rotated_frame;
 
-    std::cout << "Final pose:\n" << pose.matrix() << '\n';
+//    std::cout << "Final pose:\n" << pose.matrix() << '\n';
 
     // Continue
     // There is a valid neighbor
@@ -351,12 +404,15 @@ teleop_tracking::Mesh::findIntersect(const teleop_tracking::Mesh::IntersectInput
 
   for (unsigned i = 0; i < distances.size(); ++i)
   {
+    std::cout << "edge " << i << " " << distances[i] << '\n';
     if (distances[i] >= 0.0 && distances[i] < min_distance)
     {
       min_distance = distances[i];
       min_edge = i;
     }
   }
+
+  std::cout << "min edge: " << min_edge << " " << min_distance << '\n';
 
   IntersectOutput output;
   output.dist = min_distance;

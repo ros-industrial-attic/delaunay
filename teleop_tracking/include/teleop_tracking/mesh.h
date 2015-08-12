@@ -48,6 +48,16 @@ struct TriangleRef
 
 class Mesh
 {
+  struct Edge {
+    unsigned v1, v2; // triangle vertex index
+
+    bool operator==(const Edge& other) const
+    {
+      return (v1 != v2) && (v1 == other.v1 || v1 == other.v2)
+             && (v2 == other.v1 || v2 == other.v2);
+    }
+  };
+
 public:
   // Can throw if mesh could not be found or is not valid
   Mesh(const std::string& meshfile);
@@ -64,7 +74,7 @@ public:
   Eigen::Affine3d walkTriangle2(const Eigen::Affine3d& start, unsigned start_triangle_idx, unsigned &new_triangle_idx,
                                 const Eigen::Vector2d& travel) const;
 
-  bool walkTriangleFrom(Eigen::Affine3d& pose, unsigned& triangle_idx, unsigned& prev_triangle_idx,
+  bool walkTriangleFrom(Eigen::Affine3d& pose, unsigned& triangle_idx, unsigned& prev_triangle_idx, Edge& last_edge,
                         double& distance, const Eigen::Vector3d& direction) const;
 
   TriangleRef triangle(unsigned idx) const
@@ -82,15 +92,6 @@ protected:
                     unsigned current_triangle_idx,
                     unsigned& triangle_idx_out) const;
 
-  struct Edge {
-    unsigned v1, v2; // triangle vertex index
-
-    bool operator==(const Edge& other) const
-    {
-      return (v1 != v2) && (v1 == other.v1 || v1 == other.v2)
-             && (v2 == other.v1 || v2 == other.v2);
-    }
-  };
 
   struct IntersectInput
   {
