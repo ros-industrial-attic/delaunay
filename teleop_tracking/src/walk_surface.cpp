@@ -60,11 +60,19 @@ void pointCallback(const geometry_msgs::Point::ConstPtr& pt,
   using teleop_tracking::TrianglePose;
   using teleop_tracking::TrianglePosition;
 
-  static TrianglePose current_tpose = mesh.closestPose(Eigen::Vector3d(0.01,0,1));
+  static TrianglePose current_tpose = mesh.closestPose(Eigen::Vector3d(0.05,0.1,0.5));
 
   ROS_WARN("Moving %f %f %f", pt->x, pt->y, pt->z);
 
-  if (pt->z != 0.0) return;
+  if (pt->z != 0.0)
+  {
+    current_tpose = mesh.closestPose(current_tpose.pose.translation());
+    geometry_msgs::PoseStamped gpose = makeStampedPose(current_tpose.pose);
+    std::cout << current_tpose.pose.matrix() << '\n';
+    if (current_tpose.pose.matrix()(0,0) != current_tpose.pose.matrix()(0,0)) exit(1);
+    pose_pub.publish(gpose);
+    return;
+  }
 
   Eigen::Vector3d v (pt->x, pt->y, pt->z);
 
@@ -86,20 +94,6 @@ void pointCallback(const geometry_msgs::Point::ConstPtr& pt,
 
   pub.publish(m_pt);
   pose_pub.publish(gpose1);
-
-
-//  teleop_tracking::TrianglePosition close = mesh.closestPoint(v);
-
-
-//  Eigen::Vector3d int_point;
-//  Eigen::Vector3d v2 = mesh.walkTriangles(close.position, int_point, 0.1);
-//  visualization_msgs::Marker m_pt3 = makeMarker(v2, 4);
-//  visualization_msgs::Marker m_pt4 = makeMarker(int_point, 5);
-
-//  pub.publish(m_pt);
-//  pub.publish(m_pt2);
-//  pub.publish(m_pt3);
-//  pub.publish(m_pt4);
 }
 
 int main(int argc, char** argv)

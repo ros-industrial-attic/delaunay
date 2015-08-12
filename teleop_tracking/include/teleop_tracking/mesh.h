@@ -61,8 +61,6 @@ public:
   // Debug
   void debugInfo() const;
 
-  Eigen::Vector3d walkTriangles(const Eigen::Vector3d& start, Eigen::Vector3d& dir, double d) const;
-
   Eigen::Affine3d walkTriangle2(const Eigen::Affine3d& start, unsigned start_triangle_idx, unsigned &new_triangle_idx,
                                 const Eigen::Vector2d& travel) const;
 
@@ -80,11 +78,35 @@ public:
   }
 
 protected:
-  bool findTriangleNeighbors(unsigned idx1, unsigned idx2, std::vector<unsigned>& neighbors) const;
-
   bool findNeighbor(unsigned vertex_idx1, unsigned vertex_idx2,
                     unsigned current_triangle_idx,
                     unsigned& triangle_idx_out) const;
+
+  struct Edge {
+    unsigned v1, v2; // triangle vertex index
+
+    bool operator==(const Edge& other) const
+    {
+      return (v1 != v2) && (v1 == other.v1 || v1 == other.v2)
+             && (v2 == other.v1 || v2 == other.v2);
+    }
+  };
+
+  struct IntersectInput
+  {
+    std::vector<Edge> edges;
+    Eigen::Vector3d normal;
+    Eigen::ParametrizedLine<double, 3> walk;
+  };
+
+  struct IntersectOutput
+  {
+    unsigned edge_index;
+    double dist;
+  };
+
+  IntersectOutput findIntersect(const IntersectInput& input) const;
+
 
 private:
   EigenSTL::vector_Vector3d vertices_;

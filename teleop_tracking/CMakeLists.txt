@@ -109,8 +109,6 @@ add_library(stl_loader
 )
 
 ## Declare a cpp executable
-add_executable(local_test src/local_test.cpp)
-
 add_executable(mesh_pub src/mesh_pub.cpp)
 
 add_executable(walk_surface src/walk_surface.cpp)
@@ -129,10 +127,6 @@ target_link_libraries(teleop_tracking
 
 target_link_libraries(mesh_pub
   ${catkin_LIBRARIES}
-)
-
-target_link_libraries(local_test
-  teleop_tracking 
 )
 
 target_link_libraries(walk_surface
