@@ -90,15 +90,15 @@ void pointCallback(const geometry_msgs::Point::ConstPtr& pt,
 
   std::cout << "Current Indx: " << current_tpose.index << "\n";
 
-  geometry_msgs::PoseStamped gpose1 = makeStampedPose(current_tpose.pose);
 
   current_tpose.pose = new_pose;
+  geometry_msgs::PoseStamped gpose1 = makeStampedPose(current_tpose.pose);
 
   Eigen::Vector3d int_point = new_pose.translation();
-  visualization_msgs::Marker m_pt = makeMarker(int_point, latch_id);
+//  visualization_msgs::Marker m_pt = makeMarker(int_point, latch_id);
 
 
-  pub.publish(m_pt);
+//  pub.publish(m_pt);
   pose_pub.publish(gpose1);
 }
 

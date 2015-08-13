@@ -44,6 +44,11 @@ void teleop_tracking::combineVertices(const std::vector<teleop_tracking::StlLoad
     unsigned v1 = appendUnique(float_vector, toEigenf(f.vertices[1]));
     unsigned v2 = appendUnique(float_vector, toEigenf(f.vertices[2]));
 
+    // Small triangles should not have edges collapsed together
+    assert(v0 != v1);
+    assert(v0 != v2);
+    assert(v1 != v2);
+
     face_indices.push_back(v0);
     face_indices.push_back(v1);
     face_indices.push_back(v2);
