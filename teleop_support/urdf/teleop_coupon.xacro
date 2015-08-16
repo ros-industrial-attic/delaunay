@@ -1,0 +1,40 @@
+<?xml version="1.0" ?>
+<robot name="sia20d_teleop" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:include filename="$(find motoman_sia20d_support)/urdf/sia20d_macro.xacro"/>
+
+  <link name="world"/>
+  <link name="part">
+    <visual>
+      <origin xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://teleop_support/meshes/sphere4.stl" scale="0.2 0.2 0.2" />
+      </geometry>
+    </visual>
+  </link>
+
+  <!-- instantiating arm  --> 
+  <xacro:motoman_sia20d prefix=""/>
+
+  <!-- Camera frame -->
+  <link name="camera"/>
+
+  <joint name="world_to_base" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+    <origin xyz="-0.5 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <joint name="world_to_part" type="fixed">
+    <parent link="world"/>
+    <child link="part"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+
+  <joint name="robot_to_camera" type="fixed">
+    <parent link="tool0"/>
+    <child link="camera"/>
+    <origin xyz="0 0.15 0" rpy="0 0 0"/>
+  </joint>
+
+</robot>
