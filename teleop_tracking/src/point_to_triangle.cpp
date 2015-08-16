@@ -7,7 +7,7 @@ static T clamp(T d, T min, T max) {
   return t > max ? max : t;
 }
 
-Eigen::Vector3d teleop_tracking::closesPointOnTriangle(const Eigen::Vector3d* triangle,
+Eigen::Vector3d teleop_tracking::closestPointOnTriangle(const Eigen::Vector3d* triangle,
                                                        const Eigen::Vector3d& sourcePosition)
 {
     Eigen::Vector3d edge0 = triangle[1] - triangle[0];
@@ -145,7 +145,7 @@ bool teleop_tracking::intersectPlanes(const Eigen::ParametrizedLine<double, 3> &
 
 bool teleop_tracking::intersectRayTriangle(const Eigen::Vector3d& origin, const Eigen::Vector3d& direction, 
                                            const Eigen::Vector3d& v1, const Eigen::Vector3d& v2, 
-                                           const Eigen::Vector3d& v3, double& dist_out) const
+                                           const Eigen::Vector3d& v3, double& dist_out)
 {
   using namespace Eigen;
   Vector3d e1 = v2 - v1;
@@ -157,7 +157,7 @@ bool teleop_tracking::intersectRayTriangle(const Eigen::Vector3d& origin, const 
   if (det > -0.00001 && det < 0.00001) return false;
   double inv_det = 1.0 / det;
 
-  Vector3d T = origin - t.v1;
+  Vector3d T = origin - v1;
   double u = T.dot(p) * inv_det;
 
   if (u < 0.0 || u > 1.0) return false;
@@ -170,7 +170,7 @@ bool teleop_tracking::intersectRayTriangle(const Eigen::Vector3d& origin, const 
   double dist = e2.dot(Q) * inv_det;
 
   if (dist > 0.00001) {
-    out = dist;
+    dist_out = dist;
     return true;
   }
 

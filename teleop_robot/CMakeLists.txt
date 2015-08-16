@@ -7,9 +7,8 @@ project(teleop_robot)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   teleop_tracking
-  moveit_ros_move_group
-  moveit_ros_planning_interface
   constrained_ik
+  moveit_core
   actionlib
 )
 
@@ -85,7 +84,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES teleop_robot
-#  CATKIN_DEPENDS roscpp teleop_tracking
+  CATKIN_DEPENDS roscpp teleop_tracking
 #  DEPENDS system_lib
 )
 
@@ -97,7 +96,7 @@ add_definitions(-std=c++11)
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
- include_directories(include)
+include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
 )

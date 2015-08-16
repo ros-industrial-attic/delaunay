@@ -1,5 +1,4 @@
 ﻿#include <ros/ros.h>
-#include <moveit/move_group_interface/move_group.h>
 #include <ros/ros.h>
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Twist.h>
@@ -24,12 +23,10 @@ class Teleop
 public:
   Teleop(teleop_tracking::Mesh& mesh,
          teleop_robot::RobotInterface& interface,
-         moveit::planning_interface::MoveGroup& group,
          const TeleopOptions& options,
          ros::Publisher& pose_pub)
     : mesh_(mesh)
     , interface_(interface)
-    , group_(group)
     , options_(options)
     , pose_pub_(pose_pub)
     , last_message_(ros::Time::now())
@@ -46,9 +43,6 @@ public:
     }
     last_message_ = ros::Time::now();
 
-    ROS_INFO_STREAM("UPDATE\n" << *mv);
-    // group_.setStartStateToCurrentState();
-    // TODO: Make this all thread safe
     // calculate new pose
     Eigen::Affine3d new_pose = triangle_pose_.pose;
     unsigned new_index = triangle_pose_.index;
@@ -56,9 +50,6 @@ public:
     if (mv->linear.z != 0.0)
     {
       options_.standoff += mv->linear.z;
-      ROS_INFO("NEW STANDOFF: %f", options_.standoff);
-      // new_pose = triangle_pose_.pose;
-      // new_index = triangle_pose_.index;
     }
 
     if (mv->angular.z != 0.0)
@@ -66,7 +57,6 @@ public:
 
       Eigen::AngleAxisd z_rot (mv->angular.z, Eigen::Vector3d::UnitZ());
       new_pose = new_pose * z_rot;
-      ROS_INFO("ROTATING");
     }
     
     if (std::abs(mv->linear.x) > 0.0001 || std::abs(mv->linear.y) > 0.0001)
@@ -76,7 +66,6 @@ public:
                                       new_index,
                                       new_index,
                                       t);
-      ROS_INFO("WALKING");
     }
 
     // Publish preview
@@ -95,7 +84,6 @@ public:
     {
       return;
     }
-
 
     triangle_pose_.index = new_index;
     triangle_pose_.pose = new_pose;
@@ -120,40 +108,14 @@ private:
     Eigen::Vector3d axis = model_z.cross(world_z);
     double amt = std::acos(model_z.dot(world_z));
 
-    ROS_INFO_STREAM("Rot:\n" << axis << "\namt: " << amt);
-
     if (std::abs(amt) > options_.max_theta)
     {
       Eigen::Vector3d local_axis = model.inverse().linear() * axis;
       Eigen::AngleAxisd local_rot(options_.max_theta, local_axis.normalized());
       target = model * local_rot * Eigen::Translation3d(0, 0, options_.standoff) * flip_z;
-
     }
 
     return target;
-  }
-
-  bool executePose(const Eigen::Affine3d& target)
-  {
-    geometry_msgs::Pose p;
-    tf::poseEigenToMsg(target, p);
-
-    group_.setPoseTarget(p);
-    moveit::planning_interface::MoveGroup::Plan plan;
-    ROS_INFO("PLANNING...");
-    if (!group_.plan(plan))
-    {
-      ROS_WARN_STREAM("Could not plan to pose:\n" << target.matrix());
-      return false;
-    }
-    ROS_INFO("EXECUTING...");
-    if (!group_.execute(plan))
-    {
-      ROS_WARN_STREAM("Could not execute plan to pose:\n" << target.matrix());
-      return false;
-    }
-    ROS_INFO("DONE...");
-    return true;
   }
 
   // Current state
@@ -164,7 +126,6 @@ private:
   // Member objects
   teleop_tracking::Mesh& mesh_;
   teleop_robot::RobotInterface& interface_;
-  moveit::planning_interface::MoveGroup& group_;
   ros::Publisher& pose_pub_;
   std::vector<double> seed_;
 };
@@ -172,9 +133,6 @@ private:
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "teleop_robot_node");
-//  ros::AsyncSpinner spinner (2);
-//  spinner.start();
-
   ros::NodeHandle nh, pnh("~");
 
   std::string mesh_name;
@@ -187,20 +145,16 @@ int main(int argc, char** argv)
   }
 
   teleop_tracking::Mesh mesh(mesh_name);
-  // config group
-  moveit::planning_interface::MoveGroup group ("manipulator_camera");
-  group.setPlannerId("RRTConnectkConfigDefault");
-  group.setPlanningTime(3.0);
 
   TeleopOptions options;
-  options.max_theta = 1.0; // M_PI_4;
+  options.max_theta = M_PI_4;
   options.standoff = 0.25;
 
   teleop_robot::RobotInterface interface("manipulator_camera");
 
   ros::Publisher pub = nh.advertise<geometry_msgs::PoseStamped>("pose", 1);
 
-  Teleop teleop (mesh, interface, group, options, pub);
+  Teleop teleop (mesh, interface, options, pub);
 
   ros::Subscriber sub = nh.subscribe<geometry_msgs::Twist>("commands", 1, boost::bind(&Teleop::update, &teleop, _1));
   ros::Subscriber state_sub = nh.subscribe<sensor_msgs::JointState>("/joint_states", 1, boost::bind(&Teleop::updateSeedState, &teleop, _1));

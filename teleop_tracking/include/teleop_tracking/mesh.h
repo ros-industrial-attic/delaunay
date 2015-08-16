@@ -98,6 +98,14 @@ protected:
     std::vector<Edge> edges;
     Eigen::Vector3d normal;
     Eigen::ParametrizedLine<double, 3> walk;
+
+    void addEdge(unsigned v1, unsigned v2)
+    {
+      Edge e;
+      e.v1 = v1;
+      e.v2 = v2;
+      edges.push_back(e);
+    }
   };
 
   struct IntersectOutput
@@ -108,6 +116,9 @@ protected:
 
   IntersectOutput findIntersect(const IntersectInput& input) const;
 
+  Eigen::Affine3d transitionRelative(const Eigen::Affine3d& start,
+                                     unsigned from_idx,
+                                     unsigned to_idx) const;
 
 private:
   EigenSTL::vector_Vector3d vertices_;
