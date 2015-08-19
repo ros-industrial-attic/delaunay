@@ -71,3 +71,6 @@ qtcreator-*
 *.exe
 *.out
 *.app
+
+# QT project files
+*.user
