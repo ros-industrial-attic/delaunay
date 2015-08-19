@@ -175,7 +175,7 @@ Visualization Manager:
       Visual Enabled: true
     - Alpha: 1
       Axes Length: 0.05
-      Axes Radius: 0.01
+      Axes Radius: 0.005
       Class: rviz/Pose
       Color: 255; 25; 0
       Enabled: true
@@ -279,22 +279,22 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 3.44553
+      Distance: 0.830125
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.108605
-        Y: -0.492467
+        X: 0.0771307
+        Y: -0.350839
         Z: -2.53319e-07
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.364797
+      Pitch: 0.374797
       Target Frame: world
       Value: XYOrbit (rviz)
-      Yaw: 6.00497
+      Yaw: 5.31997
     Saved: ~
 Window Geometry:
   Camera:

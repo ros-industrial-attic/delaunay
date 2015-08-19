@@ -20,7 +20,7 @@ FakeCameraParams loadParams(ros::NodeHandle& nh)
   params.frame = nh.param<std::string>("frame", "camera");
   params.width = nh.param<int>("image_width", 640);
   params.height = nh.param<int>("image_height", 480);
-  params.rate = nh.param<double>("rate", 30.0);
+  params.rate = nh.param<double>("rate", 60.0);
   params.topic = nh.param<std::string>("topic", "camera");
   return params;
 }

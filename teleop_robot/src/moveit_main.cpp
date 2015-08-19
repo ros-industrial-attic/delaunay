@@ -48,33 +48,35 @@ public:
     group_.setStartStateToCurrentState();
     // TODO: Make this all thread safe
     // calculate new pose
-    Eigen::Affine3d new_pose;
-    unsigned new_index;
+    Eigen::Affine3d new_pose = triangle_pose_.pose;
+    unsigned new_index = triangle_pose_.index;
 
     if (mv->linear.z != 0.0)
     {
       options_.standoff += mv->linear.z;
       ROS_INFO("NEW STANDOFF: %f", options_.standoff);
-      new_pose = triangle_pose_.pose;
-      new_index = triangle_pose_.index;
+      // new_pose = triangle_pose_.pose;
+      // new_index = triangle_pose_.index;
     }
-    else if (mv->angular.z != 0.0)
+
+    if (mv->angular.z != 0.0)
     {
 
-      Eigen::AngleAxisd z_rot (mv->angular.z > 0 ? 0.1 : -0.1, Eigen::Vector3d::UnitZ());
-      new_pose = triangle_pose_.pose * z_rot;
-      new_index = triangle_pose_.index;
+      Eigen::AngleAxisd z_rot (mv->angular.z, Eigen::Vector3d::UnitZ());
+      new_pose = new_pose * z_rot;
       ROS_INFO("ROTATING");
     }
-    else
+    
+    if (std::abs(mv->linear.x) > 0.0001 || std::abs(mv->linear.y) > 0.0001)
     {
       Eigen::Vector2d t (mv->linear.x, mv->linear.y);
-      new_pose =  mesh_.walkTriangle2(triangle_pose_.pose,
-                                      triangle_pose_.index,
+      new_pose =  mesh_.walkTriangle2(new_pose,
+                                      new_index,
                                       new_index,
                                       t);
       ROS_INFO("WALKING");
     }
+
     // Publish preview
     pose_pub_.publish(makeStampedPose(new_pose));
 
@@ -121,8 +123,9 @@ private:
     if (std::abs(amt) > options_.max_theta)
     {
       Eigen::Vector3d local_axis = model.inverse().linear() * axis;
-      Eigen::AngleAxisd local_rot(options_.max_theta, local_axis);
+      Eigen::AngleAxisd local_rot(options_.max_theta, local_axis.normalized());
       target = model * local_rot * Eigen::Translation3d(0, 0, options_.standoff) * flip_z;
+
     }
 
     return target;
