@@ -4,12 +4,12 @@
 
   <link name="world"/>
   <link name="part">
-    <visual>
+    <!-- <visual>
       <origin xyz="0 0 0"/>
       <geometry>
         <mesh filename="package://teleop_support/meshes/sphere4.stl" scale="0.2 0.2 0.2" />
       </geometry>
-    </visual>
+    </visual> -->
   </link>
 
   <!-- instantiating arm  --> 
@@ -34,7 +34,7 @@
   <joint name="robot_to_camera" type="fixed">
     <parent link="tool0"/>
     <child link="camera"/>
-    <origin xyz="0 0.15 0" rpy="0 0 0"/>
+    <origin xyz="0 0.0 0.1" rpy="1.57 0 0"/>
   </joint>
 
 </robot>

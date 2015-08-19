@@ -1,0 +1,8 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: teleop_support
+    relative_path: urdf/teleop_coupon.xacro
+  SRDF:
+    relative_path: config/sia20d_teleop.srdf
+  CONFIG:
+    generated_timestamp: 1439787855

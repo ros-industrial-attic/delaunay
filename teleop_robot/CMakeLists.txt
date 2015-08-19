@@ -1,12 +1,16 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(teleop_input)
+project(teleop_robot)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
-  sensor_msgs
+  teleop_tracking
+  moveit_ros_move_group
+  moveit_ros_planning_interface
+  constrained_ik
+  actionlib
 )
 
 ## System dependencies are found with CMake's conventions
@@ -79,9 +83,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES teleop_input
-#  CATKIN_DEPENDS roscpp
+  INCLUDE_DIRS include
+#  LIBRARIES teleop_robot
+#  CATKIN_DEPENDS roscpp teleop_tracking
 #  DEPENDS system_lib
 )
 
@@ -89,41 +93,34 @@ catkin_package(
 ## Build ##
 ###########
 
+add_definitions(-std=c++11)
+
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-# include_directories(include)
+ include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a cpp library
-# add_library(teleop_input
-#   src/${PROJECT_NAME}/teleop_input.cpp
+# add_library(teleop_robot
+#   src/${PROJECT_NAME}/teleop_robot.cpp
 # )
 
 ## Declare a cpp executable
- add_executable(teleop_input_node src/kb.cpp)
- add_executable(teleop_delta_node src/kb2.cpp)
- add_executable(teleop_twist_node src/kb3.cpp)
- add_executable(teleop_js_node src/js.cpp)
+ add_executable(teleop_robot_node src/moveit_main.cpp
+                                  src/visualizations.cpp
+                                  src/clik_planner.cpp
+                                  src/robot_interface.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(teleop_input_node teleop_input_generate_messages_cpp)
+# add_dependencies(teleop_robot_node teleop_robot_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
- target_link_libraries(teleop_input_node
-   ${catkin_LIBRARIES}
- )
- target_link_libraries(teleop_delta_node
-   ${catkin_LIBRARIES}
- )
- target_link_libraries(teleop_twist_node
-   ${catkin_LIBRARIES}
- )
- target_link_libraries(teleop_js_node
-   ${catkin_LIBRARIES}
- )
+target_link_libraries(teleop_robot_node
+ ${catkin_LIBRARIES}
+)
 
 #############
 ## Install ##
@@ -140,7 +137,7 @@ include_directories(
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS teleop_input teleop_input_node
+# install(TARGETS teleop_robot teleop_robot_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -165,7 +162,7 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_teleop_input.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_teleop_robot.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

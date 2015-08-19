@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<launch>
+  <arg name="mesh"/>
+  <arg name="scale" default="0.01"/>
+
+  <node name="mesh_pub" pkg="teleop_tracking" type="mesh_pub">
+    <param name="mesh_file" value="$(arg mesh)"/>
+  </node>
+
+  <node name="teleop_test" pkg="teleop_robot" type="teleop_robot_node" output="screen">
+    <param name="mesh_file" value="$(arg mesh)"/>
+    <param name="scale" value="$(arg scale)"/>
+  </node>
+
+  <node name="fake_camera" pkg="teleop_sim_camera" type="teleop_sim_camera_node" output="screen">
+  </node>
+
+  <!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find teleop_support)/rviz/config.rviz" /> -->
+
+  <include file="$(find teleop_moveit_config)/launch/moveit_planning_execution.launch" >
+  </include>
+</launch>
