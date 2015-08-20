@@ -7,6 +7,7 @@
 #include <constrained_ik/constraints/goal_pose.h>
 #include <constrained_ik/constraints/avoid_singularities.h>
 #include <constrained_ik/constraints/avoid_joint_limits.h>
+#include <constrained_ik/constraints/avoid_singularities.h>
 #include <eigen3/Eigen/Eigen>
 #include <constrained_ik/enum_types.h>
 
@@ -23,6 +24,7 @@ private:
   constrained_ik::constraints::GoalPosition* goal_position_;
   constrained_ik::constraints::GoalOrientation* goal_orientation_;
   constrained_ik::constraints::AvoidJointLimits* goal_jointlimits_;
+  constrained_ik::constraints::AvoidSingularities* goal_singularities_;
 };
 
 
