@@ -191,7 +191,7 @@ int main(int argc, char** argv)
   group.setPlanningTime(3.0);
 
   TeleopOptions options;
-  options.max_theta = 0.8;
+  options.max_theta = M_PI_4;
   options.standoff = 0.25;
 
   teleop_robot::RobotInterface interface("manipulator_camera");

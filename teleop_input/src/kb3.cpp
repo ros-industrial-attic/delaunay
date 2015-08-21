@@ -125,11 +125,11 @@
          ROS_INFO("step size: %f", step);
          break;
        case 'q':
-          pt_.angular.z = step;
+          pt_.angular.z = 0.01;
           dirty = true;
           break;
        case 'e':
-          pt_.angular.z = -step;
+          pt_.angular.z = -0.01;
           dirty = true;
           break;
      }
