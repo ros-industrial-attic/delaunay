@@ -242,6 +242,42 @@ bool teleop_tracking::Mesh::walkTriangleFrom(Eigen::Affine3d &pose,
   }
 }
 
+bool teleop_tracking::Mesh::intersectRay(const Eigen::Vector3d &origin,
+                                         const Eigen::Vector3d &direction,
+                                         teleop_tracking::TrianglePosition &output,
+                                         double &dist) const
+{
+  unsigned best_idx = 0;
+  double min_dist = std::numeric_limits<double>::max();
+
+  for (unsigned i = 0; i < triangle_indices_.size(); i += 3)
+  {
+    double dist;
+    if (intersectRayTriangle(origin, direction,
+                             vertices_[triangle_indices_[i+0]],
+                             vertices_[triangle_indices_[i+1]],
+                             vertices_[triangle_indices_[i+2]],
+                             dist))
+    {
+      // The ray does intersect
+      if (dist < min_dist)
+      {
+        min_dist = dist;
+        best_idx = i / 3;
+      }
+    }
+  }
+
+  if (min_dist == std::numeric_limits<double>::max()) return false;
+  else
+  {
+    output.index = best_idx;
+    output.position = origin + direction * min_dist;
+    dist = min_dist;
+    return true;
+  }
+}
+
 bool teleop_tracking::Mesh::findNeighbor(unsigned idx1, unsigned idx2,
                                          unsigned current_triangle_idx,
                                          unsigned &triangle_idx_out) const

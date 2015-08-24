@@ -128,51 +128,60 @@ bool teleop_tracking::intersect(const Eigen::ParametrizedLine<double, 3> &a,
   return false;
 }
 
-bool teleop_tracking::intersectPlanes(const Eigen::ParametrizedLine<double, 3> &walk_dir,
-                                      const Eigen::ParametrizedLine<double, 3> &edge,
-                                      const Eigen::Hyperplane<double, 3> &plane,
-                                      double &out)
-{
-  Eigen::Vector3d n = plane.normal();
-  Eigen::Vector3d dir = edge.direction();
-  Eigen::Hyperplane<double, 3> iplane(n.cross(dir), edge.origin());
-
-  out = walk_dir.intersection(iplane);
-  std::cout << "S1: " << out << '\n';
-
-  return false;
-}
-
 bool teleop_tracking::intersectRayTriangle(const Eigen::Vector3d& origin, const Eigen::Vector3d& direction, 
                                            const Eigen::Vector3d& v1, const Eigen::Vector3d& v2, 
                                            const Eigen::Vector3d& v3, double& dist_out)
 {
-  using namespace Eigen;
-  Vector3d e1 = v2 - v1;
-  Vector3d e2 = v3 - v1;
+  const static double SMALL_NUMBER = 1e-8;
+  Eigen::Vector3d    u, v, n;              // triangle vectors
+  Eigen::Vector3d    dir, w0, w;           // ray vectors
+  double     r, a, b;              // params to calc ray-plane intersect
 
-  Vector3d p = direction.cross(e2);
-  double det = e1.dot(p);
+  // get triangle edge vectors and plane normal
+  u = v2 - v1;
+  v = v3 - v1;
+  n = u.cross(v);              // cross product
+  if (n == Eigen::Vector3d::Zero())             // triangle is degenerate
+      return false;                  // do not deal with this case
 
-  if (det > -0.00001 && det < 0.00001) return false;
-  double inv_det = 1.0 / det;
-
-  Vector3d T = origin - v1;
-  double u = T.dot(p) * inv_det;
-
-  if (u < 0.0 || u > 1.0) return false;
-
-  Vector3d Q = T.cross(e1);
-
-  double v = direction.dot(Q) * inv_det;
-  if (v < 0.0 || v > 1.0) return false;
-
-  double dist = e2.dot(Q) * inv_det;
-
-  if (dist > 0.00001) {
-    dist_out = dist;
-    return true;
+  dir = direction;              // ray direction vector
+  w0 = origin - v1;
+  a = -(n.dot(w0));
+  b = n.dot(dir);
+  if (std::fabs(b) < SMALL_NUMBER) {     // ray is  parallel to triangle plane
+      if (a == 0.0)                 // ray lies in triangle plane
+          return true;
+      else return false;             // ray disjoint from plane
   }
 
-  return false;
+  // get intersect point of ray with triangle plane
+  r = a / b;
+  if (r < 0.0)                    // ray goes away from triangle
+      return false;                   // => no intersect
+  // for a segment, also test if (r > 1.0) => no intersect
+
+  Eigen::Vector3d I;
+  I = origin + r * dir;            // intersect point of ray and plane
+
+  // is I inside T?
+  double    uu, uv, vv, wu, wv, D;
+  uu = u.dot(u);
+  uv = u.dot(v);
+  vv = v.dot(v);
+  w = I - v1;
+  wu = w.dot(u);
+  wv = w.dot(v);
+  D = uv * uv - uu * vv;
+
+  // get and test parametric coords
+  double s, t;
+  s = (uv * wv - vv * wu) / D;
+  if (s < 0.0 || s > 1.0)         // I is outside T
+      return false;
+  t = (uv * wu - uu * wv) / D;
+  if (t < 0.0 || (s + t) > 1.0)  // I is outside T
+      return false;
+
+  dist_out = r;
+  return true;                       // I is in T
 }

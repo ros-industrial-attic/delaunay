@@ -6,17 +6,12 @@
 namespace teleop_tracking
 {
 
-Eigen::Vector3d closestPointOnTriangle(const Eigen::Vector3d *triangle, const Eigen::Vector3d &sourcePosition);
-
+Eigen::Vector3d closestPointOnTriangle(const Eigen::Vector3d *triangle, 
+                                       const Eigen::Vector3d &sourcePosition);
 
 bool intersect(const Eigen::ParametrizedLine<double, 3>& a,
                const Eigen::ParametrizedLine<double, 3>& b,
                Eigen::Vector3d& out);
-
-bool intersectPlanes(const Eigen::ParametrizedLine<double, 3>& walk_dir,
-                     const Eigen::ParametrizedLine<double, 3>& edge,
-                     const Eigen::Hyperplane<double, 3> &plane,
-                     double &out);
 
 bool intersectRayTriangle(const Eigen::Vector3d& origin, const Eigen::Vector3d& direction, 
                           const Eigen::Vector3d& v1, const Eigen::Vector3d& v2, const Eigen::Vector3d& v3,

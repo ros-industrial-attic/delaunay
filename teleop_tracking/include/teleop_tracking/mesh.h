@@ -87,6 +87,9 @@ public:
 
   }
 
+  bool intersectRay(const Eigen::Vector3d& origin, const Eigen::Vector3d& direction,
+                    TrianglePosition& output, double& dist) const;
+
 protected:
   bool findNeighbor(unsigned vertex_idx1, unsigned vertex_idx2,
                     unsigned current_triangle_idx,
