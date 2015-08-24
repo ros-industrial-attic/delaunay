@@ -9,7 +9,6 @@
 #include "trajectory_msgs/JointTrajectory.h"
 
 teleop_robot::RobotInterface::RobotInterface(const std::string& group)
-  : ac_("joint_trajectory_action", true)
 {
   robot_model_loader::RobotModelLoader loader;
   robot_model_ = loader.getModel();
@@ -34,7 +33,8 @@ teleop_robot::RobotInterface::RobotInterface(const std::string& group)
 }
 
 bool teleop_robot::RobotInterface::planAndMove(const std::vector<double>& seedv,
-                                               const Eigen::Affine3d& target_pose)
+                                               const Eigen::Affine3d& target_pose,
+                                               ros::Publisher& pub)
 {
    auto t2 = std::chrono::steady_clock::now();
 
@@ -57,41 +57,14 @@ bool teleop_robot::RobotInterface::planAndMove(const std::vector<double>& seedv,
     auto t3 = std::chrono::steady_clock::now();
 
   // if success, construct action goal with trajectory of size 1
-  control_msgs::FollowJointTrajectoryGoal goal;
-  trajectory_msgs::JointTrajectory traj;
-  traj.header.frame_id = "world";
-  traj.header.stamp = ros::Time::now();
-  traj.joint_names = joint_names_;
-
-  // Calculate dt
-  const static double vel[7] = {1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0};
-  double max_t = 0.0;
-
+  sensor_msgs::JointState state;
+  state.header.frame_id = "world";
+  state.header.stamp = ros::Time::now();
+  state.name = joint_names_;
   for (unsigned i = 0; i < seedv.size(); ++i)
-  {
-    double dtheta = std::abs(seed(i) - result(i)) / vel[i];
-    max_t = std::max(dtheta, max_t);
-  }
+    state.position.push_back(result(i));
 
-  // to pt
-  trajectory_msgs::JointTrajectoryPoint to_pt;
-  to_pt.time_from_start = ros::Duration(max_t);
-  for (unsigned i = 0; i < seedv.size(); ++i)
-    to_pt.positions.push_back(result(i));
-  traj.points.push_back(to_pt);
-
-  goal.trajectory = traj;
-
-  auto t4 = std::chrono::steady_clock::now();
-  ac_.sendGoal(goal);
-  ac_.waitForResult();
-  auto t5 = std::chrono::steady_clock::now();
-
-  using namespace std::chrono;
-  long dt_ik = duration_cast<milliseconds>(t3 - t2).count();
-  long dt_goal = duration_cast<milliseconds>(t5 - t4).count();
-
- // ROS_INFO("Capture/Ik/Goal: %ld %ld", dt_ik, dt_goal);
+  pub.publish(state);
 
   return true;
 }

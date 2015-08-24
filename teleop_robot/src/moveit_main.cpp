@@ -24,11 +24,13 @@ public:
   Teleop(teleop_tracking::Mesh& mesh,
          teleop_robot::RobotInterface& interface,
          const TeleopOptions& options,
-         ros::Publisher& pose_pub)
+         ros::Publisher& pose_pub,
+         ros::Publisher& state_pub)
     : mesh_(mesh)
     , interface_(interface)
     , options_(options)
     , pose_pub_(pose_pub)
+    , state_pub_(state_pub)
     , last_message_(ros::Time::now())
   {
     triangle_pose_ = mesh_.closestPose(Eigen::Vector3d(0.05, 0.05, 1));
@@ -80,7 +82,7 @@ public:
       return;
     }
 
-    if (!interface_.planAndMove(seed_, target_pose))
+    if (!interface_.planAndMove(seed_, target_pose, state_pub_))
     {
       return;
     }
@@ -127,6 +129,7 @@ private:
   teleop_tracking::Mesh& mesh_;
   teleop_robot::RobotInterface& interface_;
   ros::Publisher& pose_pub_;
+  ros::Publisher& state_pub_;
   std::vector<double> seed_;
 };
 
@@ -153,8 +156,9 @@ int main(int argc, char** argv)
   teleop_robot::RobotInterface interface("manipulator_camera");
 
   ros::Publisher pub = nh.advertise<geometry_msgs::PoseStamped>("pose", 1);
+  ros::Publisher state_pub = nh.advertise<sensor_msgs::JointState>("target", 1);
 
-  Teleop teleop (mesh, interface, options, pub);
+  Teleop teleop (mesh, interface, options, pub, state_pub);
 
   ros::Subscriber sub = nh.subscribe<geometry_msgs::Twist>("commands", 1, boost::bind(&Teleop::update, &teleop, _1));
   ros::Subscriber state_sub = nh.subscribe<sensor_msgs::JointState>("/joint_states", 1, boost::bind(&Teleop::updateSeedState, &teleop, _1));

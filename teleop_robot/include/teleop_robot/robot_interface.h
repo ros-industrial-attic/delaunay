@@ -4,9 +4,7 @@
 #include "teleop_robot/clik_planner.h"
 #include <moveit/robot_model/robot_model.h>
 #include <constrained_ik/basic_kin.h>
-
-#include <actionlib/client/simple_action_client.h>
-#include <control_msgs/FollowJointTrajectoryAction.h>
+#include <ros/ros.h>
 
 namespace teleop_robot
 {
@@ -17,7 +15,8 @@ public:
   RobotInterface(const std::string& group);
 
   bool planAndMove(const std::vector<double>& seedv,
-                   const Eigen::Affine3d& target_pose);
+                   const Eigen::Affine3d& target_pose,
+                   ros::Publisher& pub);
 
 private:
   // Robot Descriptions and Solvers
@@ -25,8 +24,6 @@ private:
   constrained_ik::basic_kin::BasicKin kin_;
   teleop_robot::ClikSolver solver_;
   planning_scene::PlanningSceneConstPtr planning_scene_;
-  //
-  actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction> ac_;
   // Joint info
   std::vector<std::string> joint_names_;
 };

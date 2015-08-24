@@ -19,18 +19,16 @@
 
   <!-- run the robot simulator and action interface nodes -->
   <group if="$(arg sim)">
-    <param name="pub_rate" value="1000"/>
-    <include file="$(find industrial_robot_simulator)/launch/robot_interface_simulator.launch">
-    </include>
-		<rosparam param="initial_joint_state">[-1.34, 1.008, 0.033, -1.168, 0.106, -0.837, 2.430]</rosparam>
+    <param name="pub_rate" value="60"/>
+    <node name="robot_simulator" pkg="teleop_robot_simulator" type="teleop_robot_simulator_node"/>
   </group>
 
   <!-- publish the robot state (tf transforms) -->
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
 
-  <include file="$(find teleop_moveit_config)/launch/move_group.launch">
+  <!-- <include file="$(find teleop_moveit_config)/launch/move_group.launch">
     <arg name="publish_monitored_planning_scene" value="true" />
-  </include>
+  </include> -->
 
   <include if="$(arg rviz)" file="$(find teleop_moveit_config)/launch/moveit_rviz.launch">
     <arg name="config" value="true"/>
