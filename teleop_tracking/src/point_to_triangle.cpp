@@ -142,3 +142,37 @@ bool teleop_tracking::intersectPlanes(const Eigen::ParametrizedLine<double, 3> &
 
   return false;
 }
+
+bool teleop_tracking::intersectRayTriangle(const Eigen::Vector3d& origin, const Eigen::Vector3d& direction, 
+                                           const Eigen::Vector3d& v1, const Eigen::Vector3d& v2, 
+                                           const Eigen::Vector3d& v3, double& dist_out) const
+{
+  using namespace Eigen;
+  Vector3d e1 = v2 - v1;
+  Vector3d e2 = v3 - v1;
+
+  Vector3d p = direction.cross(e2);
+  double det = e1.dot(p);
+
+  if (det > -0.00001 && det < 0.00001) return false;
+  double inv_det = 1.0 / det;
+
+  Vector3d T = origin - t.v1;
+  double u = T.dot(p) * inv_det;
+
+  if (u < 0.0 || u > 1.0) return false;
+
+  Vector3d Q = T.cross(e1);
+
+  double v = direction.dot(Q) * inv_det;
+  if (v < 0.0 || v > 1.0) return false;
+
+  double dist = e2.dot(Q) * inv_det;
+
+  if (dist > 0.00001) {
+    out = dist;
+    return true;
+  }
+
+  return false;
+}

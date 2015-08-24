@@ -18,6 +18,11 @@ bool intersectPlanes(const Eigen::ParametrizedLine<double, 3>& walk_dir,
                      const Eigen::Hyperplane<double, 3> &plane,
                      double &out);
 
+bool intersectRayTriangle(const Eigen::Vector3d& origin, const Eigen::Vector3d& direction, 
+                          const Eigen::Vector3d& v1, const Eigen::Vector3d& v2, const Eigen::Vector3d& v3
+                          double& dist_out) const;
+ 
+
 
 }
 
