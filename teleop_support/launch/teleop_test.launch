@@ -15,8 +15,6 @@
   <node name="fake_camera" pkg="teleop_sim_camera" type="teleop_sim_camera_node" output="screen">
   </node>
 
-  <!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find teleop_support)/rviz/config.rviz" /> -->
-
   <include file="$(find teleop_moveit_config)/launch/moveit_planning_execution.launch" >
   </include>
 </launch>
