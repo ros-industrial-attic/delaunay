@@ -91,7 +91,7 @@ bool teleop_robot::RobotInterface::planAndMove(const std::vector<double>& seedv,
   long dt_ik = duration_cast<milliseconds>(t3 - t2).count();
   long dt_goal = duration_cast<milliseconds>(t5 - t4).count();
 
-//  ROS_INFO("Capture/Ik/Goal: %ld %ld", dt_ik, dt_goal);
+ // ROS_INFO("Capture/Ik/Goal: %ld %ld", dt_ik, dt_goal);
 
   return true;
 }

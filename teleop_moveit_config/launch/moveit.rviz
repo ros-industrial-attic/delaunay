@@ -8,7 +8,7 @@ Panels:
         - /Grid1
         - /Pose1
       Splitter Ratio: 0.74256
-    Tree Height: 780
+    Tree Height: 755
   - Class: rviz/Help
     Name: Help
   - Class: rviz/Views
@@ -163,6 +163,16 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+        tool_base:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        tool_nozzle:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         world:
           Alpha: 1
           Show Axes: false
@@ -196,56 +206,19 @@ Visualization Manager:
       Queue Size: 1
       Value: true
     - Class: rviz/TF
-      Enabled: true
+      Enabled: false
       Frame Timeout: 15
       Frames:
         All Enabled: true
-        base_link:
-          Value: true
-        camera:
-          Value: true
-        link_b:
-          Value: true
-        link_e:
-          Value: true
-        link_l:
-          Value: true
-        link_r:
-          Value: true
-        link_s:
-          Value: true
-        link_t:
-          Value: true
-        link_u:
-          Value: true
-        part:
-          Value: true
-        tool0:
-          Value: true
-        world:
-          Value: true
       Marker Scale: 0.75
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
-        world:
-          base_link:
-            link_s:
-              link_l:
-                link_e:
-                  link_u:
-                    link_r:
-                      link_b:
-                        link_t:
-                          tool0:
-                            camera:
-                              {}
-          part:
-            {}
+        {}
       Update Interval: 0
-      Value: true
+      Value: false
     - Class: rviz/Camera
       Enabled: true
       Image Rendering: background
@@ -301,16 +274,16 @@ Window Geometry:
     collapsed: false
   Displays:
     collapsed: false
-  Height: 1056
+  Height: 1031
   Help:
     collapsed: false
   Hide Left Dock: false
   Hide Right Dock: false
   Motion Planning:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd0000000100000000000003cb000003bffc0200000005fc00000043000003bf000001010100001dfa000000000100000002fb0000000c00430061006d0065007200610100000000ffffffff0000006200fffffffb000000100044006900730070006c00610079007301000000000000010f0000010f00fffffffb0000000800480065006c00700000000342000000bb0000007900fffffffb0000000a0056006900650077007300000003b0000000b0000000b300fffffffb0000000c00430061006d00650072006100000002ff000001610000000000000000fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e006700000003d200000016000001ab00ffffff000003af000003bf00000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000100000000000003cb000003a6fc0200000005fc00000043000003a6000001010100001dfa000000000100000002fb0000000c00430061006d0065007200610100000000ffffffff0000006200fffffffb000000100044006900730070006c00610079007301000000000000010f0000010f00fffffffb0000000800480065006c00700000000342000000bb0000007900fffffffb0000000a0056006900650077007300000003b0000000b0000000b300fffffffb0000000c00430061006d00650072006100000002ff000001610000000000000000fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e006700000003d200000016000001ab00ffffff000003af000003a600000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Views:
     collapsed: false
   Width: 1920
-  X: 1600
-  Y: 120
+  X: 0
+  Y: 25

@@ -3,6 +3,7 @@
 
 #include <constrained_ik/constrained_ik.h>
 #include <constrained_ik/constraints/goal_orientation.h>
+#include <constrained_ik/constraints/goal_tool_orientation.h>
 #include <constrained_ik/constraints/goal_position.h>
 #include <constrained_ik/constraints/goal_pose.h>
 #include <constrained_ik/constraints/avoid_singularities.h>
@@ -22,7 +23,7 @@ public:
 
 private:
   constrained_ik::constraints::GoalPosition* goal_position_;
-  constrained_ik::constraints::GoalOrientation* goal_orientation_;
+  constrained_ik::constraints::GoalToolOrientation* goal_orientation_;
   constrained_ik::constraints::AvoidJointLimits* goal_jointlimits_;
   constrained_ik::constraints::AvoidSingularities* goal_singularities_;
 };

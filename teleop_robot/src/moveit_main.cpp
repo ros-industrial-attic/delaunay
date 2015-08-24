@@ -32,20 +32,22 @@ public:
     , group_(group)
     , options_(options)
     , pose_pub_(pose_pub)
+    , last_message_(ros::Time::now())
   {
     triangle_pose_ = mesh_.closestPose(Eigen::Vector3d(0.05, 0.05, 1));
   }
 
   void update(const geometry_msgs::TwistConstPtr& mv)
   {
-    boost::mutex::scoped_lock lock(planning_mutex_, boost::try_to_lock);
-    if (!lock.owns_lock())
+    if (ros::Time::now() - last_message_ < ros::Duration(1.0 / 30.0))
     {
-      ROS_WARN("WAIT YOUR TURN");
+      ROS_INFO("WAITING");
       return;
     }
+    last_message_ = ros::Time::now();
+
     ROS_INFO_STREAM("UPDATE\n" << *mv);
-    group_.setStartStateToCurrentState();
+    // group_.setStartStateToCurrentState();
     // TODO: Make this all thread safe
     // calculate new pose
     Eigen::Affine3d new_pose = triangle_pose_.pose;
@@ -157,7 +159,7 @@ private:
   // Current state
   teleop_tracking::TrianglePose triangle_pose_;
   TeleopOptions options_;
-  boost::mutex planning_mutex_;
+  ros::Time last_message_;
 
   // Member objects
   teleop_tracking::Mesh& mesh_;
@@ -191,7 +193,7 @@ int main(int argc, char** argv)
   group.setPlanningTime(3.0);
 
   TeleopOptions options;
-  options.max_theta = M_PI_4;
+  options.max_theta = 1.0; // M_PI_4;
   options.standoff = 0.25;
 
   teleop_robot::RobotInterface interface("manipulator_camera");

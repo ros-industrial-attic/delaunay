@@ -17,6 +17,24 @@
 
   <!-- Camera frame -->
   <link name="camera"/>
+  <!-- Tool visualization -->
+  <link name="tool_base">
+    <visual>
+      <origin xyz="0 0 0.025"/>
+      <geometry>
+        <box size="0.05 0.05 0.05" />
+      </geometry>
+    </visual>
+  </link>
+
+  <link name="tool_nozzle">
+    <visual>
+      <origin xyz="0 0 0.04"/>
+      <geometry>
+        <cylinder length="0.1" radius="0.01"  />
+      </geometry>
+    </visual>
+  </link>
 
   <joint name="world_to_base" type="fixed">
     <parent link="world"/>
@@ -30,11 +48,23 @@
     <origin xyz="0 0 0" rpy="0 0 0"/>
   </joint>
 
-
   <joint name="robot_to_camera" type="fixed">
     <parent link="tool0"/>
     <child link="camera"/>
     <origin xyz="0 0.0 0.1" rpy="1.57 0 0"/>
   </joint>
+
+  <joint name="robot_to_tool_base" type="fixed">
+    <parent link="tool0"/>
+    <child link="tool_base"/>
+    <origin xyz="0 0.0 0.0" rpy="0 0 0"/>
+  </joint>
+
+  <joint name="tool_base_to_nozzle" type="fixed">
+    <parent link="tool_base"/>
+    <child link="tool_nozzle"/>
+    <origin xyz="0 0.0 0.04" rpy="1.57 0 0"/>
+  </joint>
+
 
 </robot>
