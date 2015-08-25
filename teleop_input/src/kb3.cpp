@@ -132,6 +132,22 @@
           pt_.angular.z = -0.01;
           dirty = true;
           break;
+       case 'o':
+          pt_.angular.x = 0.2;
+          dirty = true;
+          break;
+       case 'p':
+          pt_.angular.x = -0.2;
+          dirty = true;
+          break;
+       case 'k':
+          pt_.angular.y = 0.2;
+          dirty = true;
+          break;
+       case 'l':
+          pt_.angular.y = -0.2;
+          dirty = true;
+          break;
      }
 
 
