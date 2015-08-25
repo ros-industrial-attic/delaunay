@@ -68,3 +68,23 @@ bool teleop_robot::RobotInterface::planAndMove(const std::vector<double>& seedv,
 
   return true;
 }
+
+bool teleop_robot::RobotInterface::fk(const Eigen::VectorXd& joints, Eigen::Affine3d& pose) const
+{
+  return kin_.calcFwdKin(joints, pose);
+}
+
+bool teleop_robot::RobotInterface::ik(const Eigen::Affine3d& pose, const Eigen::VectorXd& seed,
+                                      Eigen::VectorXd& solution) const
+{
+  try {
+    solver_.calcInvKin(pose, seed, planning_scene_, solution);
+    return true;
+  } catch (std::exception& e) {
+    ROS_ERROR_STREAM(e.what());
+    return false;
+  }
+}
+
+
+

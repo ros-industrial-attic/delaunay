@@ -4,7 +4,7 @@ const std::string marker_ns = "ns";
 const int source_id = 0;
 const int latch_id = 1;
 
-double scale = 0.1;
+double scale = 0.005;
 
 visualization_msgs::Marker makeMarker(const Eigen::Vector3d& pt, int marker_id)
 {

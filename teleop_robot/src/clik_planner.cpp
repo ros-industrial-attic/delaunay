@@ -12,7 +12,7 @@ teleop_robot::ClikSolver::ClikSolver()
   addConstraint(goal_position_,constrained_ik::constraint_types::Primary);
   addConstraint(goal_orientation_,constrained_ik::constraint_types::Auxiliary);
   addConstraint(goal_jointlimits_, constrained_ik::constraint_types::Auxiliary);
-//  addConstraint(goal_singularities_, constrained_ik::constraint_types::Auxiliary);
+  // addConstraint(goal_singularities_, constrained_ik::constraint_types::Auxiliary);
 }
 
 teleop_robot::ClikSolver::~ClikSolver() {}

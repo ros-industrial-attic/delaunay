@@ -9,6 +9,11 @@
 namespace teleop_robot
 {
 
+inline Eigen::VectorXd fromVector(const std::vector<double>& vec)
+{
+  return Eigen::VectorXd::Map(vec.data(), vec.size());
+}
+
 class RobotInterface
 {
 public:
@@ -17,6 +22,11 @@ public:
   bool planAndMove(const std::vector<double>& seedv,
                    const Eigen::Affine3d& target_pose,
                    ros::Publisher& pub);
+
+  bool fk(const Eigen::VectorXd& joints, Eigen::Affine3d& pose) const;
+
+  bool ik(const Eigen::Affine3d& pose, const Eigen::VectorXd& seed,
+          Eigen::VectorXd& solution) const;
 
 private:
   // Robot Descriptions and Solvers
