@@ -81,6 +81,16 @@ teleop_tracking::TrianglePosition teleop_tracking::Mesh::closestPoint(const Eige
   return result;
 }
 
+teleop_tracking::TrianglePose teleop_tracking::Mesh::toPose(const TrianglePosition& pos) const
+{
+  TrianglePose tpose;
+  std::cout << "Close point: " << pos.position.transpose() << '\n';
+  std::cout << "Index: " << pos.index << '\n';
+  tpose.pose = makeArbitraryPose(pos.position, face_normals_[pos.index]);
+  tpose.index = pos.index;
+  return tpose;
+}
+
 teleop_tracking::TrianglePose teleop_tracking::Mesh::closestPose(const Eigen::Vector3d &source) const
 {
   TrianglePosition p = closestPoint(source);
