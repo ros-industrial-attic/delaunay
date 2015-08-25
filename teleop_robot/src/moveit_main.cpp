@@ -48,12 +48,11 @@ public:
                            init_pose.matrix().col(2).head<3>(),
                            intersect, dist))
     {
-      ROS_INFO("YES");
       current_pose_ = mesh_.toPose(intersect);
     }
     else
     {
-      ROS_WARN("FAIL");
+      ROS_WARN("Could not intersect point-of-view with part");
     }
   }
 
@@ -219,20 +218,17 @@ public:
   {
     if (seed_.empty())
     {
-      ROS_INFO("WAITING");
       return;
     }
 
     if (ros::Time::now() - last_message_ < ros::Duration(1.0 / 30.0))
     {
-      ROS_INFO("WAITING");
       return;
     }
     last_message_ = ros::Time::now();
 
     if (active_mode_ == OperationMode::Tracking) 
     {
-      ROS_INFO("tracking...");
       // tracking surface
       TrackingMode::Transaction t = tracking_mode_.calc(*mv);
       pose_pub_.publish(makeStampedPose(t.triangle_pose.pose));
@@ -248,7 +244,6 @@ public:
     else 
     {
       // free move
-      ROS_INFO("Free...");
       FreeMode::Transaction t = free_mode_.calc(*mv);
       if (interface_.planAndMove(seed_, t.target, state_pub_))
       {
@@ -319,7 +314,7 @@ private:
 
 void callback(const std_msgs::EmptyConstPtr&, Teleop& teleop)
 {
-  ROS_WARN("TOGGLING MODE");
+  ROS_INFO("TOGGLING MODE");
   if (teleop.mode() == Teleop::OperationMode::Free) {
     teleop.updateMode(Teleop::OperationMode::Tracking);
   } else {

@@ -4,8 +4,6 @@
 #include <ros/ros.h>
 #include <eigen3/Eigen/Dense>
 
-#include <chrono>
-
 #include "trajectory_msgs/JointTrajectory.h"
 
 teleop_robot::RobotInterface::RobotInterface(const std::string& group)
@@ -36,7 +34,6 @@ bool teleop_robot::RobotInterface::planAndMove(const std::vector<double>& seedv,
                                                const Eigen::Affine3d& target_pose,
                                                ros::Publisher& pub)
 {
-   auto t2 = std::chrono::steady_clock::now();
 
    // attempt to calculate IK
    Eigen::VectorXd seed(seedv.size());
@@ -51,10 +48,8 @@ bool teleop_robot::RobotInterface::planAndMove(const std::vector<double>& seedv,
    catch (std::exception& e)
    {
      ROS_ERROR_STREAM(e.what());
-     ROS_ERROR_STREAM("POSE\n" << target_pose.matrix());
      return false;
    }
-    auto t3 = std::chrono::steady_clock::now();
 
   // if success, construct action goal with trajectory of size 1
   sensor_msgs::JointState state;
