@@ -113,12 +113,17 @@ include_directories(
                                   src/clik_planner.cpp
                                   src/robot_interface.cpp)
 
+ add_executable(trail_publish_node src/trail_publish_node.cpp)
+
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(teleop_robot_node teleop_robot_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(teleop_robot_node
+ ${catkin_LIBRARIES}
+)
+target_link_libraries(trail_publish_node
  ${catkin_LIBRARIES}
 )
 

@@ -12,6 +12,9 @@
     <param name="scale" value="$(arg scale)"/>
   </node>
 
+  <node name="teleop_trail" pkg="teleop_robot" type="trail_publish_node" output="screen">
+  </node>
+
   <node name="fake_camera" pkg="teleop_sim_camera" type="teleop_sim_camera_node" output="screen">
   </node>
 

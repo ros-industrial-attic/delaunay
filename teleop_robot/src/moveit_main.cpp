@@ -13,12 +13,6 @@
 
 #include "teleop_robot/robot_interface.h"
 
-#include <pcl_ros/point_cloud.h>
-#include <pcl/point_types.h>
-
-typedef pcl::PointCloud<pcl::PointXYZ> ColorCloud;
-
-
 struct TeleopOptions
 {
   double max_theta; // deviation from world z (rad)
@@ -203,27 +197,23 @@ public:
   Teleop(teleop_tracking::Mesh& mesh,
          teleop_robot::RobotInterface& interface,
          const TeleopOptions& options,
-         ros::Publisher& pose_pub,
-         ros::Publisher& state_pub,
-         ros::Publisher& visual_pub,
          ros::NodeHandle& nh)
-    : interface_(interface)
-    , pose_pub_(pose_pub)
-    , state_pub_(state_pub)
-    , visual_pub_(visual_pub)
-    , points_pub_(nh.advertise<ColorCloud>("painting", 1))
-    , last_message_(ros::Time::now())
-    , tracking_mode_(mesh, options)
+    : tracking_mode_(mesh, options)
     , free_mode_()
     , active_mode_(OperationMode::Tracking)
-    , cloud_(new ColorCloud())
+    , last_message_(ros::Time::now())
+    , interface_(interface)
   {
     // Initialize state machine
     Eigen::Affine3d start_pose = Eigen::Affine3d::Identity();
-    start_pose.translation() = Eigen::Vector3d(0.1, 0.1, 1.0);
+    start_pose.translation() = Eigen::Vector3d(0.1, 0.1, 1.0); // arbitrary starting position
     tracking_mode_.start(start_pose);
 
-    cloud_->header.frame_id = "world";
+    // Initialize publishers
+    pose_pub_ = nh.advertise<geometry_msgs::PoseStamped>("track_point", 1);
+    state_pub_ = nh.advertise<sensor_msgs::JointState>("target", 1);
+    visual_pub_ = nh.advertise<visualization_msgs::Marker>("looking_at", 1);
+    points_pub_ = nh.advertise<geometry_msgs::Point>("incident_point", 100);
   }
 
   void update(const geometry_msgs::TwistConstPtr& mv)
@@ -241,17 +231,13 @@ public:
 
     if (active_mode_ == OperationMode::Tracking) 
     {
-      // Cal looking point, add to point cloud
+      // Calc looking point, add to point cloud
       Eigen::Vector3d v;
       if (this->lookingAt(v))
       {
-        cloud_->header.stamp = ros::Time::now().toNSec();
-        cloud_->points.push_back (pcl::PointXYZ(v(0),v(1),v(2)));
-        points_pub_.publish(cloud_);
-      }
-      else
-      {
-        ROS_INFO("None");
+        geometry_msgs::Point pt;
+        pt.x = v(0); pt.y = v(1); pt.z = v(2);
+        points_pub_.publish(pt);
       }
 
       // tracking surface
@@ -353,12 +339,16 @@ private:
 
   // Member objects
   teleop_robot::RobotInterface& interface_;
-  ros::Publisher& pose_pub_;
-  ros::Publisher& state_pub_;
-  ros::Publisher& visual_pub_;
-  ros::Publisher points_pub_;
+
+  // ROS Publishers
+  ros::Publisher pose_pub_; // tracking pose (debug)
+  ros::Publisher state_pub_; // publishes joint targets
+  ros::Publisher visual_pub_; // publishes marker that indicates look pt in free-mode (debug)
+  ros::Publisher points_pub_; // publishes the incident points in tracking-mode - integrates w/
+                              // trail publishing node
+
+  // Current position of the robot, used for IK/FK
   std::vector<double> seed_;
-  ColorCloud::Ptr cloud_;
 };
 
 void callback(const std_msgs::EmptyConstPtr&, Teleop& teleop)
@@ -393,15 +383,19 @@ int main(int argc, char** argv)
 
   teleop_robot::RobotInterface interface("manipulator_camera");
 
-  ros::Publisher pub = nh.advertise<geometry_msgs::PoseStamped>("pose", 1);
-  ros::Publisher state_pub = nh.advertise<sensor_msgs::JointState>("target", 1);
-  ros::Publisher visual_pub = nh.advertise<visualization_msgs::Marker>("looking", 1);
-//  ros::Publisher points_pub = nh.advertise<ColorCloud> ("points2", 1);
-  Teleop teleop (mesh, interface, options, pub, state_pub, visual_pub, nh);
+  Teleop teleop (mesh, interface, options, nh);
 
-  ros::Subscriber sub = nh.subscribe<geometry_msgs::Twist>("commands", 1, boost::bind(&Teleop::update, &teleop, _1));
-  ros::Subscriber state_sub = nh.subscribe<sensor_msgs::JointState>("/joint_states", 1, boost::bind(&Teleop::updateSeedState, &teleop, _1));
-  ros::Subscriber mode_sub = nh.subscribe<std_msgs::Empty>("change_mode", 1, boost::bind(callback, _1, boost::ref(teleop)));
+  ros::Subscriber sub =
+      nh.subscribe<geometry_msgs::Twist>("commands", 1,
+                                         boost::bind(&Teleop::update, &teleop, _1));
+
+  ros::Subscriber state_sub =
+      nh.subscribe<sensor_msgs::JointState>("/joint_states", 1,
+                                            boost::bind(&Teleop::updateSeedState, &teleop, _1));
+
+  ros::Subscriber mode_sub =
+      nh.subscribe<std_msgs::Empty>("change_mode", 1,
+                                    boost::bind(callback, _1, boost::ref(teleop)));
 
   ros::spin();
 

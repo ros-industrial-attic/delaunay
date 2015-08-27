@@ -4,13 +4,9 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /Global Options1
-        - /Grid1
-        - /Pose1
-        - /Marker1
-        - /Marker2
+        - /Trail1/Status1
       Splitter Ratio: 0.74256
-    Tree Height: 331
+    Tree Height: 899
   - Class: rviz/Help
     Name: Help
   - Class: rviz/Views
@@ -39,70 +35,6 @@ Visualization Manager:
       Plane Cell Count: 10
       Reference Frame: <Fixed Frame>
       Value: true
-    - Class: moveit_rviz_plugin/MotionPlanning
-      Enabled: false
-      Move Group Namespace: ""
-      MoveIt_Goal_Tolerance: 0
-      MoveIt_Planning_Attempts: 10
-      MoveIt_Planning_Time: 5
-      MoveIt_Use_Constraint_Aware_IK: true
-      MoveIt_Warehouse_Host: 127.0.0.1
-      MoveIt_Warehouse_Port: 33829
-      Name: MotionPlanning
-      Planned Path:
-        Links:
-          All Links Enabled: true
-          Expand Joint Details: false
-          Expand Link Details: false
-          Expand Tree: false
-          Link Tree Style: Links in Alphabetic Order
-        Loop Animation: true
-        Robot Alpha: 0.5
-        Show Robot Collision: false
-        Show Robot Visual: true
-        Show Trail: false
-        State Display Time: 0.05 s
-        Trajectory Topic: move_group/display_planned_path
-      Planning Metrics:
-        Payload: 1
-        Show Joint Torques: false
-        Show Manipulability: false
-        Show Manipulability Index: false
-        Show Weight Limit: false
-        TextHeight: 0.08
-      Planning Request:
-        Colliding Link Color: 255; 0; 0
-        Goal State Alpha: 1
-        Goal State Color: 250; 128; 0
-        Interactive Marker Size: 0
-        Joint Violation Color: 255; 0; 255
-        Planning Group: manipulator
-        Query Goal State: true
-        Query Start State: false
-        Show Workspace: false
-        Start State Alpha: 1
-        Start State Color: 0; 255; 0
-      Planning Scene Topic: move_group/monitored_planning_scene
-      Robot Description: robot_description
-      Scene Geometry:
-        Scene Alpha: 1
-        Scene Color: 50; 230; 50
-        Scene Display Time: 0.2
-        Show Scene Geometry: true
-        Voxel Coloring: Z-Axis
-        Voxel Rendering: Occupied Voxels
-      Scene Robot:
-        Attached Body Color: 150; 50; 150
-        Links:
-          All Links Enabled: true
-          Expand Joint Details: false
-          Expand Link Details: false
-          Expand Tree: false
-          Link Tree Style: Links in Alphabetic Order
-        Robot Alpha: 0.5
-        Show Robot Collision: false
-        Show Robot Visual: true
-      Value: false
     - Alpha: 0.75
       Class: rviz/RobotModel
       Collision Enabled: false
@@ -193,16 +125,16 @@ Visualization Manager:
       Enabled: true
       Head Length: 0.3
       Head Radius: 0.1
-      Name: Pose
+      Name: TrackPose
       Shaft Length: 1
       Shaft Radius: 0.05
       Shape: Axes
-      Topic: /pose
+      Topic: /track_point
       Value: true
     - Class: rviz/Marker
       Enabled: true
       Marker Topic: /markers
-      Name: Marker
+      Name: Mesh
       Namespaces:
         ns: true
       Queue Size: 1
@@ -225,27 +157,57 @@ Visualization Manager:
       Enabled: true
       Image Rendering: background
       Image Topic: /camera/image
-      Name: Camera
+      Name: FakeCamera
       Overlay Alpha: 0.5
       Queue Size: 2
       Transport Hint: raw
       Value: true
       Visibility:
         Grid: true
-        Marker: true
-        MotionPlanning: true
-        Pose: true
+        LookPoint: true
+        Mesh: true
         RobotModel: true
         TF: true
+        TrackPose: true
+        Trail: true
         Value: true
       Zoom Factor: 1
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /looking
-      Name: Marker
+      Marker Topic: /looking_at
+      Name: LookPoint
       Namespaces:
-        ns: true
+        {}
       Queue Size: 100
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: x
+      Class: rviz/PointCloud2
+      Color: 200; 255; 200
+      Color Transformer: FlatColor
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 0.217387
+      Min Color: 0; 0; 0
+      Min Intensity: -0.146268
+      Name: Trail
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 10
+      Size (m): 0.01
+      Style: Points
+      Topic: /trail
+      Use Fixed Frame: true
+      Use rainbow: true
       Value: true
   Enabled: true
   Global Options:
@@ -262,38 +224,36 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 1.16627
+      Distance: 1.30269
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.152596
-        Y: -0.079211
+        X: -0.0055913
+        Y: -0.0407577
         Z: -3.72528e-07
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.819797
+      Pitch: 0.940204
       Target Frame: world
       Value: XYOrbit (rviz)
-      Yaw: 4.75997
+      Yaw: 4.93815
     Saved: ~
 Window Geometry:
-  Camera:
-    collapsed: false
   Displays:
     collapsed: false
-  Height: 1056
+  FakeCamera:
+    collapsed: false
+  Height: 1175
   Help:
     collapsed: false
   Hide Left Dock: false
   Hide Right Dock: false
-  Motion Planning:
-    collapsed: false
-  QMainWindow State: 000000ff00000000fd0000000100000000000003cb000003bffc0200000005fc00000043000003bf000001010100001dfa000000000100000002fb0000000c00430061006d0065007200610100000000ffffffff0000006200fffffffb000000100044006900730070006c00610079007301000000000000010f0000010f00fffffffb0000000800480065006c00700000000342000000bb0000007900fffffffb0000000a0056006900650077007300000003b0000000b0000000b300fffffffb0000000c00430061006d00650072006100000002ff000001610000000000000000fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e006700000003d200000016000001ab00ffffff000003ad000003bf00000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000100000000000003cb00000436fc0200000005fc0000004300000436000001010100001dfa000000000100000002fb0000001400460061006b006500430061006d0065007200610100000000ffffffff0000007d00fffffffb000000100044006900730070006c00610079007301000000000000010f0000010f00fffffffb0000000800480065006c00700000000342000000bb0000007900fffffffb0000000a0056006900650077007300000003b0000000b0000000b300fffffffb0000000c00430061006d00650072006100000002ff000001610000000000000000fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e006700000003d20000001600000000000000000000026f0000043600000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Views:
     collapsed: false
-  Width: 1918
-  X: 1600
-  Y: 120
+  Width: 1600
+  X: 3520
+  Y: 0
