@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   constrained_ik
   moveit_core
   actionlib
+  pcl_ros
 )
 
 ## System dependencies are found with CMake's conventions

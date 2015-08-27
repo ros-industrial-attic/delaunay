@@ -42,3 +42,28 @@ geometry_msgs::PoseStamped makeStampedPose(const Eigen::Affine3d& pose)
   return stamped;
 }
 
+
+visualization_msgs::Marker makePointsMarker(const std::vector<geometry_msgs::Point> &pts)
+{
+  visualization_msgs::Marker marker;
+  marker.action = visualization_msgs::Marker::ADD;
+  marker.header.frame_id = "world";
+  marker.header.stamp = ros::Time::now();
+  marker.ns = "painting";
+  marker.id = 11;
+  marker.type = visualization_msgs::Marker::POINTS;
+  marker.pose.orientation.x = 0.0;
+  marker.pose.orientation.y = 0.0;
+  marker.pose.orientation.z = 0.0;
+  marker.pose.orientation.w = 1.0;
+  marker.scale.x = 0.005;
+  marker.scale.y = 0.005;
+//  marker.scale.z = 1;
+  marker.color.r = 1.0;
+  marker.color.g = 0.5;
+  marker.color.b = 0.5;
+  marker.color.a = 1.0;
+  marker.points = pts;
+  marker.lifetime = ros::Duration();
+  return marker;
+}

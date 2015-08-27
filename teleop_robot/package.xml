@@ -45,6 +45,9 @@
   <depend>moveit_core</depend>
   <depend>contrained_ik</depend>
   <depend>actionlib</depend>
+  <depend>pcl_ros</depend>
+  <depend>libpcl-all-dev</depend>
+  <depend>libpcl-all</depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

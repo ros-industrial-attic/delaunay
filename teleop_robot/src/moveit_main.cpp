@@ -13,6 +13,7 @@
 
 #include "teleop_robot/robot_interface.h"
 
+
 struct TeleopOptions
 {
   double max_theta; // deviation from world z (rad)
@@ -199,16 +200,19 @@ public:
          const TeleopOptions& options,
          ros::Publisher& pose_pub,
          ros::Publisher& state_pub,
-         ros::Publisher& visual_pub)
+         ros::Publisher& visual_pub,
+         ros::NodeHandle& nh)
     : interface_(interface)
     , pose_pub_(pose_pub)
     , state_pub_(state_pub)
     , visual_pub_(visual_pub)
+    , points_pub_(nh.advertise<visualization_msgs::Marker>("painting", 1))
     , last_message_(ros::Time::now())
     , tracking_mode_(mesh, options)
     , free_mode_()
     , active_mode_(OperationMode::Tracking)
   {
+    // Initialize state machine
     Eigen::Affine3d start_pose = Eigen::Affine3d::Identity();
     start_pose.translation() = Eigen::Vector3d(0.1, 0.1, 1.0);
     tracking_mode_.start(start_pose);
@@ -229,6 +233,21 @@ public:
 
     if (active_mode_ == OperationMode::Tracking) 
     {
+      // Cal looking point, add to point cloud
+      Eigen::Vector3d v;
+      if (this->lookingAt(v))
+      {
+         geometry_msgs::Point pt;
+         pt.x = v(0); pt.y = v(1); pt.z = v(2);
+         points_.push_back(pt);
+         visualization_msgs::Marker pts = makePointsMarker(points_);
+         points_pub_.publish(pts);
+      }
+      else
+      {
+        ROS_INFO("None");
+      }
+
       // tracking surface
       TrackingMode::Transaction t = tracking_mode_.calc(*mv);
       pose_pub_.publish(makeStampedPose(t.triangle_pose.pose));
@@ -278,7 +297,7 @@ public:
     Eigen::Affine3d eef_pose;
     if (!interface_.fk(teleop_robot::fromVector(seed_), eef_pose))
     {
-      ROS_WARN("Failed to compute IK to seed track mode.");
+      ROS_WARN("Failed to compute FK to seed track mode.");
       return;
     }
     active_mode_ = mode;
@@ -291,6 +310,28 @@ public:
     {
       free_mode_.start(eef_pose);
     }
+  }
+
+  bool lookingAt(Eigen::Vector3d& pt) const
+  {
+    Eigen::Affine3d eef_pose;
+    if (!interface_.fk(teleop_robot::fromVector(seed_), eef_pose))
+    {
+      ROS_WARN("Failed to compute FK to seed track mode.");
+      return false;
+    }
+
+    teleop_tracking::TrianglePosition intersect;
+    double dist;
+    if (tracking_mode_.mesh().intersectRay(eef_pose.translation() - Eigen::Vector3d(0.5, 0, 0),
+                           eef_pose.matrix().col(2).head<3>(),
+                           intersect, dist))
+    {
+      pt = intersect.position;
+      return true;
+    }
+    ROS_INFO("no intersect");
+    return false;
   }
   
   OperationMode mode() const { return active_mode_; } 
@@ -309,7 +350,9 @@ private:
   ros::Publisher& pose_pub_;
   ros::Publisher& state_pub_;
   ros::Publisher& visual_pub_;
+  ros::Publisher points_pub_;
   std::vector<double> seed_;
+  std::vector<geometry_msgs::Point> points_;
 };
 
 void callback(const std_msgs::EmptyConstPtr&, Teleop& teleop)
@@ -347,7 +390,8 @@ int main(int argc, char** argv)
   ros::Publisher pub = nh.advertise<geometry_msgs::PoseStamped>("pose", 1);
   ros::Publisher state_pub = nh.advertise<sensor_msgs::JointState>("target", 1);
   ros::Publisher visual_pub = nh.advertise<visualization_msgs::Marker>("looking", 1);
-  Teleop teleop (mesh, interface, options, pub, state_pub, visual_pub);
+//  ros::Publisher points_pub = nh.advertise<PointCloud> ("points2", 1);
+  Teleop teleop (mesh, interface, options, pub, state_pub, visual_pub, nh);
 
   ros::Subscriber sub = nh.subscribe<geometry_msgs::Twist>("commands", 1, boost::bind(&Teleop::update, &teleop, _1));
   ros::Subscriber state_sub = nh.subscribe<sensor_msgs::JointState>("/joint_states", 1, boost::bind(&Teleop::updateSeedState, &teleop, _1));
