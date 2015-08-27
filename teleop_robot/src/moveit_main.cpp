@@ -13,6 +13,11 @@
 
 #include "teleop_robot/robot_interface.h"
 
+#include <pcl_ros/point_cloud.h>
+#include <pcl/point_types.h>
+
+typedef pcl::PointCloud<pcl::PointXYZ> ColorCloud;
+
 
 struct TeleopOptions
 {
@@ -206,16 +211,19 @@ public:
     , pose_pub_(pose_pub)
     , state_pub_(state_pub)
     , visual_pub_(visual_pub)
-    , points_pub_(nh.advertise<visualization_msgs::Marker>("painting", 1))
+    , points_pub_(nh.advertise<ColorCloud>("painting", 1))
     , last_message_(ros::Time::now())
     , tracking_mode_(mesh, options)
     , free_mode_()
     , active_mode_(OperationMode::Tracking)
+    , cloud_(new ColorCloud())
   {
     // Initialize state machine
     Eigen::Affine3d start_pose = Eigen::Affine3d::Identity();
     start_pose.translation() = Eigen::Vector3d(0.1, 0.1, 1.0);
     tracking_mode_.start(start_pose);
+
+    cloud_->header.frame_id = "world";
   }
 
   void update(const geometry_msgs::TwistConstPtr& mv)
@@ -237,11 +245,9 @@ public:
       Eigen::Vector3d v;
       if (this->lookingAt(v))
       {
-         geometry_msgs::Point pt;
-         pt.x = v(0); pt.y = v(1); pt.z = v(2);
-         points_.push_back(pt);
-         visualization_msgs::Marker pts = makePointsMarker(points_);
-         points_pub_.publish(pts);
+        cloud_->header.stamp = ros::Time::now().toNSec();
+        cloud_->points.push_back (pcl::PointXYZ(v(0),v(1),v(2)));
+        points_pub_.publish(cloud_);
       }
       else
       {
@@ -352,7 +358,7 @@ private:
   ros::Publisher& visual_pub_;
   ros::Publisher points_pub_;
   std::vector<double> seed_;
-  std::vector<geometry_msgs::Point> points_;
+  ColorCloud::Ptr cloud_;
 };
 
 void callback(const std_msgs::EmptyConstPtr&, Teleop& teleop)
@@ -390,7 +396,7 @@ int main(int argc, char** argv)
   ros::Publisher pub = nh.advertise<geometry_msgs::PoseStamped>("pose", 1);
   ros::Publisher state_pub = nh.advertise<sensor_msgs::JointState>("target", 1);
   ros::Publisher visual_pub = nh.advertise<visualization_msgs::Marker>("looking", 1);
-//  ros::Publisher points_pub = nh.advertise<PointCloud> ("points2", 1);
+//  ros::Publisher points_pub = nh.advertise<ColorCloud> ("points2", 1);
   Teleop teleop (mesh, interface, options, pub, state_pub, visual_pub, nh);
 
   ros::Subscriber sub = nh.subscribe<geometry_msgs::Twist>("commands", 1, boost::bind(&Teleop::update, &teleop, _1));
