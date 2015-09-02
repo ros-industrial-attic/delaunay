@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+
+<!-- Used for Sony Six Axis Wireless Controller -->
+
+<!-- NOTE YOU MUST RUN THE SIXAD service in the background FIRST -->
+
+<!-- sudo apt-get install sixad -->
+<!-- "sixad -start" -->
+
+<launch>
+  <!-- Reads a /dev/input/<joystick> file and publishes messages -->
+  <node name="linux_joy_interface" pkg="joy" type="joy_node"/>
+  <!-- Interprets ROS messages the specific controller -->
+  <node name="sixad_joy_interpreter" pkg="teleop_input" type="teleop_js_node"/>
+</launch>

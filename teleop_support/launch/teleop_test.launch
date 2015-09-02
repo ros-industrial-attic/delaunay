@@ -1,23 +1,35 @@
 <?xml version="1.0" ?>
 <launch>
   <arg name="mesh"/>
-  <arg name="scale" default="0.01"/>
+  <arg name="publish_trail" default="true"/>
+  <arg name="use_joystick" default="false"/>
+  <arg name="camera_frame" default="camera"/>
 
+  <!-- Shows a mesh visualization -->
   <node name="mesh_pub" pkg="teleop_tracking" type="mesh_pub">
     <param name="mesh_file" value="$(arg mesh)"/>
   </node>
 
+  <!-- Core application -->
   <node name="teleop_test" pkg="teleop_robot" type="teleop_robot_node" output="screen">
     <param name="mesh_file" value="$(arg mesh)"/>
-    <param name="scale" value="$(arg scale)"/>
   </node>
 
-  <node name="teleop_trail" pkg="teleop_robot" type="trail_publish_node" output="screen">
+  <!-- Shows white trails raytraced from the cameras pose -->
+  <node if="$(arg publish_trail)" name="teleop_trail" pkg="teleop_robot" type="trail_publish_node" output="screen">
   </node>
 
+  <!-- Required for the 'fake' camera view -->
   <node name="fake_camera" pkg="teleop_sim_camera" type="teleop_sim_camera_node" output="screen">
+    <param name="frame" value="$(arg camera_frame)"/>
   </node>
 
+  <!-- Launches simulation -->
   <include file="$(find teleop_moveit_config)/launch/moveit_planning_execution.launch" >
   </include>
+
+  <!-- Launch input -->
+  <include if="$(arg use_joystick)" file="$(find teleop_input)/launch/sony.launch"/>
+  <include unless="$(arg use_joystick)" file="$(find teleop_input)/launch/kb.launch"/>
+
 </launch>

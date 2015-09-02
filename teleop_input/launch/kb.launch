@@ -1,0 +1,4 @@
+<?xml version="1.0" ?>
+<launch>
+  <node name="keyboard_joy_interpreter" pkg="teleop_input" type="teleop_twist_node" output="screen"/> 
+</launch>

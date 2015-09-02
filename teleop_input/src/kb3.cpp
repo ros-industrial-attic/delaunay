@@ -1,14 +1,21 @@
 #include <ros/ros.h>
-#include <geometry_msgs/Twist.h>
 #include <signal.h>
 #include <termios.h>
 #include <stdio.h>
 
-#define KEYCODE_R 0x43
-#define KEYCODE_L 0x44
-#define KEYCODE_U 0x41
-#define KEYCODE_D 0x42
-#define KEYCODE_Q 0x71
+#include <geometry_msgs/Twist.h>
+#include <std_msgs/Empty.h>
+
+// Special Keycode Constants
+#define KEYCODE_R 0x43 // arrow key right
+#define KEYCODE_L 0x44 // arrow key left
+#define KEYCODE_U 0x41 // arrow key up
+#define KEYCODE_D 0x42 // arrow key down
+#define KEYCODE_Q 0x71 // escape?
+
+// Topic names
+#define TWIST_MSG_TOPIC "commands"
+#define MODE_MSG_TOPIC "change_mode"
 
  class TeleopTurtle
  {
@@ -22,22 +29,23 @@
    ros::NodeHandle nh_;
    geometry_msgs::Twist pt_;
    ros::Publisher vel_pub_;
-
+   ros::Publisher mode_pub_;
  };
 
  TeleopTurtle::TeleopTurtle()
  {
-   vel_pub_ = nh_.advertise<geometry_msgs::Twist>("commands", 1);
+   vel_pub_ = nh_.advertise<geometry_msgs::Twist>(TWIST_MSG_TOPIC, 1);
+   mode_pub_ = nh_.advertise<std_msgs::Empty>(MODE_MSG_TOPIC, 1);
  }
 
  int kfd = 0;
  struct termios cooked, raw;
+ bool global_abort_requested = false;
 
  void quit(int sig)
  {
    tcsetattr(kfd, TCSANOW, &cooked);
-   ros::shutdown();
-   exit(0);
+   global_abort_requested = true;
  }
 
 
@@ -46,18 +54,20 @@
    ros::init(argc, argv, "teleop_turtle");
    TeleopTurtle teleop_turtle;
 
-   signal(SIGINT,quit);
+   signal(SIGINT, quit);
 
    teleop_turtle.keyLoop();
 
-   return(0);
+   return 0;
  }
 
 
  void TeleopTurtle::keyLoop()
  {
    char c;
-   bool dirty=false;
+   bool dirty = false;
+   bool mode_dirty = false;
+
    double step = 0.002;
 
 
@@ -65,6 +75,7 @@
    tcgetattr(kfd, &cooked);
    memcpy(&raw, &cooked, sizeof(struct termios));
    raw.c_lflag &=~ (ICANON | ECHO);
+
    // Setting a new line, then end of file
    raw.c_cc[VEOL] = 1;
    raw.c_cc[VEOF] = 2;
@@ -72,10 +83,15 @@
 
    puts("Reading from keyboard");
    puts("---------------------------");
-   puts("Use arrow keys to move the turtle.");
+   puts("Use W, A, S, D to move in cartesian directions.");
+   puts("Use Z and C to move in and out.");
+   puts("Use Q and E to yaw the camera.");
+   puts("Use arrow keys to adjust view angle.");
+   puts("Use SPACE to toggle motion mode.");
+   puts("Use T and Y to adjust the step size.");
 
 
-   for(;;)
+   while(!global_abort_requested)
    {
      // get the next event from the keyboard
      if(read(kfd, &c, 1) < 0)
@@ -88,42 +104,41 @@
 
      switch(c)
      {
-       case KEYCODE_L:
-         ROS_DEBUG("LEFT");
+       // Cartesian Motion
+       case 'd':
          pt_.linear.x = step;
          dirty = true;
          break;
-       case KEYCODE_R:
-         ROS_DEBUG("RIGHT");
+       case 'a':
          pt_.linear.x = -step;
          dirty = true;
          break;
-       case KEYCODE_U:
-         ROS_DEBUG("UP");
+       case 'c':
          pt_.linear.z = step;
          dirty = true;
          break;
-       case KEYCODE_D:
-         ROS_DEBUG("DOWN");
+       case 'z':
          pt_.linear.z = -step;
          dirty = true;
          break;
-       case 'a':
+       case 'w':
          pt_.linear.y = step;
          dirty = true;
          break;
-       case 'd':
+       case 's':
          pt_.linear.y = -step;
          dirty = true;
-       break;
+         break;
+       // Adjust step sizes
        case 't':
          step += 0.0005;
          ROS_INFO("step size: %f", step);
-       break;
+         break;
        case 'y':
          step -= 0.0005;
          ROS_INFO("step size: %f", step);
          break;
+         // Rotations
        case 'q':
           pt_.angular.z = 0.01;
           dirty = true;
@@ -132,26 +147,30 @@
           pt_.angular.z = -0.01;
           dirty = true;
           break;
-       case 'o':
+       case KEYCODE_D:
           pt_.angular.x = 0.2;
           dirty = true;
           break;
-       case 'p':
+       case KEYCODE_U:
           pt_.angular.x = -0.2;
           dirty = true;
           break;
-       case 'k':
+       case KEYCODE_R:
           pt_.angular.y = 0.2;
           dirty = true;
           break;
-       case 'l':
+       case KEYCODE_L:
           pt_.angular.y = -0.2;
           dirty = true;
+          break;
+       // Change mode
+       case ' ':
+          mode_dirty = true;
           break;
      }
 
 
-     if(dirty ==true)
+     if (dirty)
      {
        vel_pub_.publish(pt_);
        pt_.linear.x = 0.0;
@@ -162,7 +181,15 @@
        pt_.angular.z = 0.0;
        dirty=false;
      }
-   }
+
+     if (mode_dirty)
+     {
+       std_msgs::Empty empty;
+       mode_pub_.publish(empty);
+       mode_dirty = false;
+     }
+
+   } // end main loop
 
 
    return;
