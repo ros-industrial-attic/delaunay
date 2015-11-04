@@ -19,7 +19,7 @@ You'll be prompted to input your password. When prompted, press the playstation 
 ## Launch
 
 ```
-roslaunch teleop_support teleop_support mesh:=<ABS_PATH_TO_STL_FILE> [use_joystick:=true]
+roslaunch teleop_support teleop_test.launch mesh:=<ABS_PATH_TO_STL_FILE> [use_joystick:=true]
 ```
 
 If you use the joystick flag, make sure `sixad` is already running.
